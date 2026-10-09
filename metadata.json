@@ -1,6 +1,8 @@
 {
   "name": "สั่งอาหาร 3D • เดลิเวอรี่",
   "description": "ทดลองเลือกอาหารแบบ 3D จัดตะกร้า และติดตามการจัดส่งจำลองบนมือถือ แท็บเล็ต และคอมพิวเตอร์",
-  "requestFramePermissions": [],
+  "requestFramePermissions": [
+    "camera"
+  ],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
