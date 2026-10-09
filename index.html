@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>สั่งอาหาร 3D • เดลิเวอรี่</title>
+<meta name="description" content="ทดลองเลือกอาหารแบบ 3D จัดตะกร้า และติดตามการจัดส่งจำลองบนมือถือ แท็บเล็ต และคอมพิวเตอร์">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="th_TH">
+<meta property="og:title" content="สั่งอาหาร 3D • เดลิเวอรี่">
+<meta property="og:description" content="ทดลองเลือกอาหารแบบ 3D จัดตะกร้า และติดตามการจัดส่งจำลอง">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{--bg:#f4f5f4;--fg:#1d1a16;--card:#fff;--mut:#6b6358;--ac:#00b14f;--line:#e4dbcd;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15130f;--fg:#f4ede2;--card:#221e18;--mut:#a89d8c;--line:#352f26}}
+:root[data-theme="dark"]{--bg:#15130f;--fg:#f4ede2;--card:#221e18;--mut:#a89d8c;--line:#352f26}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:"Noto Sans Thai","Sarabun",system-ui,sans-serif;display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer}
+#top{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+#top h1{flex:1;margin:0;font-size:18px}
+.ib{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 12px}
+main{flex:1;overflow-y:auto;padding:14px;display:grid;gap:12px;align-content:start}
+.rc{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;text-align:left;width:100%}
+.rc .e{font-size:42px}.rc b{font-size:16px}.rc small{display:block;color:var(--mut);margin-top:3px}
+.bn{background:var(--card);border-radius:16px;padding:16px;border:1px solid var(--line)}
+.bn .e{font-size:48px}.bn h2{margin:4px 0}.bn p{margin:0;color:var(--mut);font-size:14px}
+.mi{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;width:100%;text-align:left}
+.mi .e{font-size:34px}.mi .t{flex:1}.mi small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+.tag{background:var(--ac);color:#fff;border-radius:999px;padding:5px 10px;font-size:12px;white-space:nowrap}
+#view{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:5}
+#stage{flex:1;position:relative;min-height:0;background:#120e0a}
+#gl{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#vback{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 12px)}
+#badge{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--ac);color:#fff;border-radius:999px;padding:5px 12px;font-size:12px}
+#hint{position:absolute;bottom:8px;width:100%;text-align:center;font-size:12px;color:#c9bfae;pointer-events:none}
+#vp{padding:14px;border-top:1px solid var(--line);padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+#vp h2{margin:0;font-size:19px}#vp p{margin:4px 0 10px;color:var(--mut);font-size:14px}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.sg button{border:1px solid var(--line);background:var(--card);padding:6px 14px;border-radius:9px}
+.sg button.on{background:var(--fg);color:var(--bg)}
+#add{flex:1;background:var(--ac);color:#fff;border:0;border-radius:12px;padding:13px;font-weight:600}
+#sheet{position:fixed;inset:0;background:#0008;z-index:9;display:flex;align-items:flex-end}
+#sheet>div{background:var(--bg);width:100%;border-radius:20px 20px 0 0;padding:18px;max-height:70%;overflow:auto}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#000d;color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;display:none;z-index:20}
+.th{width:72px;height:72px;border-radius:14px;object-fit:cover;flex:none}
+#pimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:1}
+#vback,#badge,#zm{z-index:2}
+#zm{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px}#zm .ib{width:42px;height:42px;font-size:20px;padding:0;border-radius:50%}
+.in{width:100%;box-sizing:border-box;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;margin:6px 0 12px}
+#addr{display:flex;gap:8px;align-items:center;padding:9px 14px;background:var(--card);border-bottom:1px solid var(--line);font-size:13px;cursor:pointer}
+#addr #at{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+#track{position:fixed;inset:0;background:var(--bg);z-index:7;display:flex;flex-direction:column}
+#tt{display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px}
+#tt b{font-size:17px;display:block}#tt small{color:var(--mut)}
+#mw{position:relative;flex:0 0 auto;overflow:hidden}#map{width:100%;display:block;max-height:44vh;background:#ebe7dc;touch-action:none;cursor:grab}
+#mc{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px}#mc .ib{width:36px;height:36px;padding:0;border-radius:50%;font-size:15px}
+#mhint{position:absolute;left:8px;bottom:6px;font-size:11px;color:#fff;background:#0006;padding:3px 8px;border-radius:8px;pointer-events:none}
+.pu{transform-box:fill-box;transform-origin:center;animation:pu 1.4s infinite}@keyframes pu{from{transform:scale(.7);opacity:.6}to{transform:scale(2.2);opacity:0}}
+#tc{flex:1;overflow:auto;padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+.stp{display:flex;margin-bottom:6px}.stp span{font-size:11px;color:var(--mut);text-align:center;flex:1}.stp span.on{color:var(--ac);font-weight:700}
+.bar{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-bottom:14px}.bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .6s}
+.rd{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+#top{background:var(--ac);color:#fff;border:0}#top .ib{background:#ffffff26;color:#fff;border-color:#ffffff40}
+main{padding-bottom:84px}#list{display:grid;gap:12px}
+#hub .in{margin:0 0 10px}
+#chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px}#chips button{white-space:nowrap;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-size:13px}#chips button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+#promo{background:linear-gradient(90deg,#00b14f,#7ed957);color:#fff;border-radius:14px;padding:12px 14px;font-size:13px;margin-bottom:2px}
+#cbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--ac);color:#fff;border-radius:14px;padding:14px;display:flex;justify-content:space-between;z-index:4;cursor:pointer;box-shadow:0 6px 18px #0004}
+*,*::before,*::after{box-sizing:border-box}
+body{min-width:0;height:100dvh}
+main{min-height:0}
+#top h1,.mi .t,.rc>span{min-width:0;overflow-wrap:anywhere}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--fg);outline-offset:3px}
+#top button:focus-visible{outline-color:#fff}
+#stage{min-height:160px}
+#vp{max-height:60%;overflow-y:auto;flex-shrink:0}
+#toast{max-width:calc(100% - 24px);overflow-wrap:anywhere}
+@media(max-width:380px){#top{gap:6px;padding:10px}#top h1{font-size:16px}.rc,.mi{gap:8px;padding:10px}.th{width:56px;height:56px}#vp{padding:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}.sg button{padding:6px 10px}}
+</style></head>
+<body>
+<noscript><div class="bn" role="status">หน้านี้ต้องใช้ JavaScript เพื่อแสดงเมนูอาหารและโมเดล 3D กรุณาเปิดใช้งาน JavaScript ในเบราว์เซอร์</div></noscript>
+<header id="top"><button id="back" class="ib" hidden>←</button><h1 id="ttl">🍽 ร้านอาหารใกล้คุณ</h1><button id="cartbtn" class="ib">🛒 <span id="cn">0</span></button></header>
+<div id="addr"><span>📍</span><span id="at"></span><span>▾</span></div>
+<main id="home"><div id="hub"><input id="q" class="in" placeholder="🔍 ค้นหาร้านหรือเมนู"><div id="chips"></div><div id="promo">🎉 โค้ด <b>SAVE30</b> ลด ฿30 • <b>FIRST50</b> ลด ฿50 — ใส่ตอนยืนยันออเดอร์</div></div><div id="list"></div></main>
+<div id="cbar" hidden><span id="cbt"></span><b>ดูตะกร้า ›</b></div>
+<main id="rest" hidden></main>
+<section id="view" hidden>
+ <div id="stage"><canvas id="gl"></canvas><img id="pimg" hidden alt=""><button id="vback" class="ib">← เมนู</button><span id="badge">3D</span><div id="zm"><button id="zi" class="ib">＋</button><button id="zo" class="ib">－</button></div><div id="hint">ลากเพื่อหมุน • บีบนิ้ว/ล้อเมาส์เพื่อซูม • แตะสองครั้งเพื่อรีเซ็ต</div></div>
+ <div id="vp"><h2 id="vn"></h2><p id="vd"></p>
+  <div class="row"><span class="sg" id="sz"></span><button class="ib" id="au">🔄 หมุนอัตโนมัติ</button><button class="ib" id="rp">✨ เด้งอีกครั้ง</button><button class="ib" id="ph">📷 ภาพจริง</button><button class="ib" id="up">📤 อัปโหลดรูป</button><button class="ib" id="gb">🧊 โมเดลจริง .glb</button><button class="ib" id="gd">↩</button><input id="gf" type="file" accept=".glb" hidden><input id="pf" type="file" accept="image/*" hidden></div>
+  <div class="row"><span class="sg"><button id="qm">−</button><button id="qn" style="pointer-events:none">1</button><button id="qp">+</button></span><button id="add"></button></div>
+ </div>
+</section>
+<div id="sheet" hidden><div id="sb"></div></div>
+<section id="track" hidden><div id="tt"><button id="tb" class="ib">✕</button><div><b id="ts"></b><small id="te"></small></div></div><div id="mw"><svg id="map" viewBox="0 0 360 250"></svg><div id="mc"><button id="mzi" class="ib">＋</button><button id="mzo" class="ib">－</button><button id="mrl" class="ib">⟲</button><button id="mrr" class="ib">⟳</button><button id="mre" class="ib">🎯</button></div><div id="mhint">ลากเลื่อน • บีบนิ้วซูม/หมุน • 🎯 ตามไรเดอร์</div></div><div id="tc"></div></section>
+<div id="toast"></div>
+<div id="root" style="display:none"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const cv=$('#gl'),stage=$('#stage');
+const R=(()=>{try{return new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true})}catch(error){return null}})();
+if(!R){
+ $('#list').innerHTML='<div class="bn" role="status"><h2>ยังแสดงอาหาร 3D ไม่ได้</h2><p>กรุณาตรวจสอบอินเทอร์เน็ต และใช้เบราว์เซอร์รุ่นใหม่ที่รองรับ WebGL เช่น Chrome, Safari, Edge หรือ Firefox</p><p style="margin-top:12px"><a class="ib" href="/" style="display:inline-block;color:var(--fg)">ลองโหลดหน้าอีกครั้ง</a></p></div>';
+ $('#addr').hidden=true;$('#cartbtn').hidden=true;$('#hub').hidden=true;
+ return;
+}
+R.setPixelRatio(Math.min(devicePixelRatio,2));
+R.outputEncoding=THREE.sRGBEncoding;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.15;
+R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(38,1,0.1,50);cam.position.set(0,4,7.6);cam.lookAt(0,0.9,0);
+
+// studio environment (soft boxes) for realistic reflections
+(function(){const c=document.createElement('canvas');c.width=512;c.height=256;const g=c.getContext('2d');
+ const gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#cfd8e6');gr.addColorStop(.5,'#6d6a66');gr.addColorStop(1,'#2a2622');g.fillStyle=gr;g.fillRect(0,0,512,256);
+ g.fillStyle='#fff';[[60,50,90,40],[300,40,110,50],[420,90,60,30]].forEach(b=>{g.shadowColor='#fff';g.shadowBlur=30;g.fillRect(...b)});
+ const t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;t.encoding=THREE.sRGBEncoding;
+ const pm=new THREE.PMREMGenerator(R);scene.environment=pm.fromEquirectangular(t).texture;})();
+
+scene.add(new THREE.HemisphereLight(0xfff2e0,0x3a2a1a,.5));
+const key=new THREE.DirectionalLight(0xfff0dd,2.2);key.position.set(4,8,5);key.castShadow=true;
+key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-4,right:4,top:4,bottom:-4,near:1,far:25});key.shadow.bias=-0.0005;key.shadow.radius=4;scene.add(key);
+const rim=new THREE.DirectionalLight(0xffb070,1.2);rim.position.set(-5,4,-4);scene.add(rim);
+
+// noise bump
+const nz=(()=>{const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d'),d=g.createImageData(256,256);
+ for(let i=0;i<d.data.length;i+=4){const v=120+Math.random()*135;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}g.putImageData(d,0,0);
+ const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(3,3);return t})();
+const M=(c,r=.6,m=0,x={})=>new THREE.MeshPhysicalMaterial(Object.assign({color:c,roughness:r,metalness:m},x));
+const mesh=(g,m,p=[0,0,0])=>{const o=new THREE.Mesh(g,m);o.position.set(...p);return o};
+
+const SH=new THREE.Color(0x2a2a2a);
+const ctex=(s,f,rep=1)=>{const c=document.createElement('canvas');c.width=c.height=s;f(c.getContext('2d'),s);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep);t.anisotropy=8;return t};
+const blotch=(base,vars,n)=>ctex(256,(g,s)=>{g.fillStyle=base;g.fillRect(0,0,s,s);for(let i=0;i<n;i++){g.fillStyle=vars[i%vars.length];g.globalAlpha=.08+Math.random()*.25;g.beginPath();g.arc(Math.random()*s,Math.random()*s,2+Math.random()*16,0,7);g.fill()}});
+const wood=ctex(512,(g,s)=>{const cols=['#5a3a22','#6a4529','#4e311c','#734b2c'];for(let y=0;y<4;y++){g.fillStyle=cols[y];g.fillRect(0,y*s/4,s,s/4);for(let i=0;i<60;i++){g.strokeStyle='rgba(30,16,6,'+(.05+Math.random()*.15)+')';g.lineWidth=1+Math.random()*2;const yy=y*s/4+Math.random()*s/4;g.beginPath();g.moveTo(0,yy);g.bezierCurveTo(s*.3,yy+(Math.random()-.5)*8,s*.6,yy+(Math.random()-.5)*8,s,yy);g.stroke()}g.fillStyle='rgba(0,0,0,.45)';g.fillRect(0,y*s/4,s,2)}},6);
+const floor=mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({map:wood,roughness:.65}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+scene.fog=new THREE.Fog(0x120e0a,10,24);
+// plate
+const plate=mesh(new THREE.LatheGeometry([[0,0],[1.9,0],[2.3,.12],[2.5,.17],[2.45,.19],[2.25,.15],[1.9,.1],[0,.1]].map(p=>new THREE.Vector2(...p)),64),M(0xf6f3ee,.18,0,{clearcoat:1,clearcoatRoughness:.05}));
+plate.scale.set(1.15,1,1.15);plate.castShadow=plate.receiveShadow=true;scene.add(plate);
+const Y0=0.1;
+
+function burger(){const g=new THREE.Group();
+ const bt=ctex(256,(c,s)=>{const gr=c.createLinearGradient(0,0,0,s);gr.addColorStop(0,'#8a4a14');gr.addColorStop(.5,'#d49a48');gr.addColorStop(1,'#f0cf8c');c.fillStyle=gr;c.fillRect(0,0,s,s);for(let i=0;i<260;i++){c.fillStyle=Math.random()<.5?'#6e3a10':'#f4d9a0';c.globalAlpha=.06+Math.random()*.15;c.beginPath();c.arc(Math.random()*s,Math.random()*s*.6,1+Math.random()*9,0,7);c.fill()}});
+ const bun=M(0xffffff,.5,0,{map:bt,bumpMap:nz,bumpScale:.5,clearcoat:.35,clearcoatRoughness:.45,sheen:SH});
+ const pt=ctex(256,(c,s)=>{c.fillStyle='#5b3622';c.fillRect(0,0,s,s);for(let i=0;i<500;i++){c.fillStyle=['#3a2013','#7a4a2c','#2a160c'][i%3];c.globalAlpha=.1+Math.random()*.3;c.beginPath();c.arc(Math.random()*s,Math.random()*s,1+Math.random()*7,0,7);c.fill()}c.globalAlpha=.8;c.strokeStyle='#1a0d06';c.lineWidth=14;for(let k=-2;k<7;k++){c.beginPath();c.moveTo(k*50,0);c.lineTo(k*50+s,s);c.stroke()}});
+ const pm=M(0xffffff,.8,0,{map:pt,bumpMap:nz,bumpScale:2.5}),ps=M(0x5b3622,.85,0,{bumpMap:nz,bumpScale:3});
+ const bot=mesh(new THREE.SphereGeometry(1.1,64,32,0,Math.PI*2,Math.PI/2,Math.PI/2),bun,[0,Y0+.5,0]);bot.scale.y=.45;g.add(bot);
+ g.add(mesh(new THREE.CylinderGeometry(1.1,1.08,.3,64),[ps,pm,pm],[0,Y0+.65,0]));
+ const cg=new THREE.PlaneGeometry(2.1,2.1,28,28),cp=cg.attributes.position;
+ for(let i=0;i<cp.count;i++){const x=cp.getX(i),y=cp.getY(i),r=Math.hypot(x,y);cp.setZ(i,r>1?-Math.pow(r-1,1.4)*.9+Math.sin(Math.atan2(y,x)*6)*.01:0)}cg.computeVertexNormals();
+ const ch=mesh(cg,M(0xf5a623,.3,0,{clearcoat:.6,clearcoatRoughness:.25,side:THREE.DoubleSide}),[0,Y0+.82,0]);ch.rotation.set(-Math.PI/2,0,Math.PI/4);g.add(ch);
+ g.add(mesh(new THREE.CylinderGeometry(1,1,.09,48),M(0xd2331f,.25,0,{clearcoat:1,clearcoatRoughness:.1}),[0,Y0+.92,0]));
+ g.add(mesh(new THREE.CylinderGeometry(.78,.78,.095,48),M(0xe8624a,.3,0,{clearcoat:.8}),[0,Y0+.92,0]));
+ const on=mesh(new THREE.TorusGeometry(.8,.05,8,48),M(0xe9d3ee,.3,0,{clearcoat:.5}),[0,Y0+1,0]);on.rotation.x=Math.PI/2;g.add(on);
+ const lg=new THREE.CylinderGeometry(1.25,1.25,.05,96,1),lp=lg.attributes.position;
+ for(let i=0;i<lp.count;i++){const x=lp.getX(i),z=lp.getZ(i),r=Math.hypot(x,z)/1.25;lp.setY(i,lp.getY(i)+Math.sin(Math.atan2(z,x)*14)*.07*r+Math.sin(r*9)*.02*r)}lg.computeVertexNormals();
+ g.add(mesh(lg,M(0x5fae2b,.4,0,{side:THREE.DoubleSide,clearcoat:.3}),[0,Y0+1.06,0]));
+ const top=new THREE.Group();top.position.y=Y0+1.1;
+ const tb=mesh(new THREE.SphereGeometry(1.15,64,32,0,Math.PI*2,0,Math.PI/2),bun);tb.scale.y=.9;top.add(tb);
+ const sd=new THREE.InstancedMesh(new THREE.SphereGeometry(.05,8,6),M(0xf5e6c4,.5),70),d=new THREE.Object3D();
+ for(let i=0;i<70;i++){const th=.12+Math.random()*1.0,ph=Math.random()*6.283;
+  d.position.set(1.16*Math.sin(th)*Math.cos(ph),1.16*.9*Math.cos(th)+.01,1.16*Math.sin(th)*Math.sin(ph));
+  d.rotation.set(Math.random(),Math.random()*3,Math.random());d.scale.set(1,.6,1.7);d.updateMatrix();sd.setMatrixAt(i,d.matrix)}
+ top.add(sd);g.add(top);return g}
+function pizza(){const g=new THREE.Group();
+ g.add(mesh(new THREE.CylinderGeometry(1.7,1.7,.16,96),M(0xffffff,.75,0,{map:blotch('#e2b366',['#c98a3e','#f0cf8f','#8a5520'],240),bumpMap:nz,bumpScale:1}),[0,Y0+.08,0]));
+ const rim=mesh(new THREE.TorusGeometry(1.62,.16,24,96),M(0xffffff,.65,0,{map:blotch('#dba455',['#9a5e20','#f1cf8a','#6a3a12'],300),bumpMap:nz,bumpScale:1.5}),[0,Y0+.2,0]);rim.rotation.x=Math.PI/2;rim.scale.z=.8;g.add(rim);
+ g.add(mesh(new THREE.CylinderGeometry(1.52,1.52,.03,96),M(0xc4301c,.4,0,{clearcoat:.5}),[0,Y0+.17,0]));
+ g.add(mesh(new THREE.CylinderGeometry(1.46,1.46,.05,96),M(0xffffff,.28,0,{map:blotch('#f4d57e',['#e2a43a','#fff1b8','#b8651d','#f9e6a0'],400),clearcoat:1,clearcoatRoughness:.2,bumpMap:nz,bumpScale:2}),[0,Y0+.2,0]));
+ const bm=M(0xf8e08a,.2,0,{clearcoat:1});
+ for(let i=0;i<16;i++){const a=Math.random()*6.28,r=Math.sqrt(Math.random())*1.3,b=mesh(new THREE.SphereGeometry(.1+Math.random()*.1,16,8),bm,[Math.cos(a)*r,Y0+.23,Math.sin(a)*r]);b.scale.y=.35;g.add(b)}
+ const pm=M(0xffffff,.3,0,{map:blotch('#b3281a',['#d9573c','#7a1a12','#f2a58a'],90),clearcoat:1,clearcoatRoughness:.2,bumpMap:nz,bumpScale:1});
+ for(let i=0;i<10;i++){const r=1.15*Math.sqrt((i+.5)/10),a=i*2.4,p=mesh(new THREE.SphereGeometry(.26,32,12,0,7,0,Math.PI/2),pm,[r*Math.cos(a),Y0+.23,r*Math.sin(a)]);p.scale.y=.22;p.rotation.y=Math.random()*6;g.add(p)}
+ const lm=M(0x2f7d2a,.35,0,{side:THREE.DoubleSide,clearcoat:.4,bumpMap:nz,bumpScale:1});
+ for(let i=0;i<5;i++){const a=i*1.3+.5,r=.35+i*.2,l=mesh(new THREE.SphereGeometry(.2,16,12),lm,[r*Math.cos(a),Y0+.3,r*Math.sin(a)]);l.scale.set(1,.12,1.6);l.rotation.y=a*2;g.add(l)}
+ for(let i=0;i<4;i++){const c=mesh(new THREE.BoxGeometry(3.45,.2,.025),M(0x3a2410,1),[0,Y0+.2,0]);c.rotation.y=i*Math.PI/4;g.add(c)}
+ return g}
+function donut(){const g=new THREE.Group(),f=new THREE.Group();f.rotation.x=-Math.PI/2;f.position.y=Y0+.47;g.add(f);
+ f.add(new THREE.Mesh(new THREE.TorusGeometry(1,.44,48,96),M(0xd9a05b,.7,0,{bumpMap:nz,bumpScale:1})));
+ const ig=new THREE.TorusGeometry(1,.47,48,96),p=ig.attributes.position;
+ for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),u=Math.atan2(y,x),cx=Math.cos(u),cy=Math.sin(u);
+  const dx=x-cx,dy=y-cy,dz=z,l=Math.hypot(dx,dy,dz)||1,s=Math.min(1,Math.max(0,(dz/l+.05)/.3));
+  const t=.435+.04*s*s*(3-2*s)+.03*s*Math.sin(u*7)*.5;p.setXYZ(i,cx+dx/l*t,cy+dy/l*t,dz/l*t+.03*s)}ig.computeVertexNormals();
+ f.add(new THREE.Mesh(ig,M(0xff6f9c,.25,0,{clearcoat:1,clearcoatRoughness:.08})));
+ const sp=new THREE.InstancedMesh(new THREE.CylinderGeometry(.018,.018,.14,6),M(0xffffff,.4),90),d=new THREE.Object3D(),col=[0xffffff,0xffe066,0x6ee7ff,0x7cf29a,0xa78bfa];
+ for(let i=0;i<90;i++){const u=Math.random()*6.283,v=.5+Math.random()*2.1,rr=.49;
+  d.position.set((1+rr*Math.cos(v))*Math.cos(u),(1+rr*Math.cos(v))*Math.sin(u),rr*Math.sin(v)+.015);
+  d.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3);d.updateMatrix();sp.setMatrixAt(i,d.matrix);sp.setColorAt(i,new THREE.Color(col[i%5]))}
+ f.add(sp);return g}
+
+const C=(c,d)=>new THREE.Color(/^#[0-9a-f]{6}$/i.test(c||'')?c:d);
+function noodle_bowl(col={}){const g=new THREE.Group(),mc=C(col.main,'#e8c872'),ac=C(col.accent,'#a8541e'),tc=C(col.topping,'#7a3b24');
+ g.add(mesh(new THREE.LatheGeometry([[0,.02],[.8,.02],[1.2,.35],[1.75,.95],[1.95,1.25],[1.88,1.27],[1.68,.95],[1.1,.4],[0,.32]].map(p=>new THREE.Vector2(...p)),64),M(0xf4f1ec,.15,0,{clearcoat:1,side:THREE.DoubleSide}),[0,Y0,0]));
+ g.add(mesh(new THREE.CylinderGeometry(1.7,1.7,.02,64),M(ac,.1,0,{clearcoat:1,clearcoatRoughness:.05}),[0,Y0+1,0]));
+ const om=new THREE.MeshPhysicalMaterial({color:0xffd27a,roughness:.05,transparent:true,opacity:.55,clearcoat:1});
+ for(let i=0;i<28;i++){const a=Math.random()*6.28,r=Math.sqrt(Math.random())*1.6,o=mesh(new THREE.CircleGeometry(.05+Math.random()*.1,16),om,[Math.cos(a)*r,Y0+1.015,Math.sin(a)*r]);o.rotation.x=-Math.PI/2;g.add(o)}
+ const nm=M(mc,.45,0,{bumpMap:nz,bumpScale:.4,clearcoat:.3});
+ for(let s=0;s<44;s++){const pts=[],a0=Math.random()*6.28,r0=.2+Math.random()*1.25,y0=Y0+1.02+Math.random()*.14,dr=Math.random()<.5?1:-1;
+  for(let i=0;i<9;i++){const a=a0+dr*i*.55,r=Math.max(.1,r0+Math.sin(i*1.3+s)*.18);pts.push(new THREE.Vector3(Math.cos(a)*r,y0+Math.sin(i*1.7+s)*.05+i*.01,Math.sin(a)*r))}
+  g.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),56,.032,6),nm))}
+ const e=mesh(new THREE.SphereGeometry(.5,32,16),M(0xfaf6ee,.25,0,{clearcoat:.6}),[.8,Y0+1.12,.5]);e.scale.set(1,.5,1.2);g.add(e);
+ g.add(mesh(new THREE.SphereGeometry(.22,24,12),M(0xf2a900,.15,0,{clearcoat:1}),[.8,Y0+1.2,.5]));
+ const cm=M(0xffffff,.45,0,{map:blotch('#'+tc.getHexString(),['#3a2410','#fff2d0'],60),bumpMap:nz,bumpScale:1});
+ for(let i=0;i<3;i++){const s=mesh(new THREE.CylinderGeometry(.5,.5,.07,32),cm,[-.7+i*.1,Y0+1.1+i*.05,.3-i*.35]);s.rotation.z=.2;g.add(s)}
+ const gm=M(0x3fa535,.5);
+ for(let i=0;i<22;i++){const o=mesh(new THREE.TorusGeometry(.05,.016,6,12),gm,[(Math.random()-.5)*1.2,Y0+1.1,(Math.random()-.5)*1.2-.3]);o.rotation.set(Math.random()*3,Math.random()*3,0);g.add(o)}
+ return g}
+function rice_plate(col={}){const g=new THREE.Group(),mc=C(col.main,'#f6f1e4'),ac=C(col.accent,'#b8651b'),tc=C(col.topping,'#d9a45a'),th='#'+tc.getHexString(),ox=-.4,oz=-.1;
+ const core=mesh(new THREE.SphereGeometry(1,32,16,0,7,0,Math.PI/2),M(mc.clone().multiplyScalar(.85),.8),[ox,Y0,oz]);core.scale.y=.8;g.add(core);
+ const N=2400,gm=new THREE.InstancedMesh(new THREE.SphereGeometry(.05,8,6),M(0xffffff,.45,0,{sheen:SH,clearcoat:.3}),N),d=new THREE.Object3D();
+ for(let i=0;i<N;i++){const cs=Math.random(),sn=Math.sqrt(1-cs*cs),ph=Math.random()*6.283,rr=1.03+Math.random()*.04;
+  d.position.set(ox+rr*sn*Math.cos(ph),Y0+rr*.8*cs,oz+rr*sn*Math.sin(ph));d.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3);d.scale.set(1.5,.6,.6);d.updateMatrix();gm.setMatrixAt(i,d.matrix);gm.setColorAt(i,mc.clone().multiplyScalar(.9+Math.random()*.15))}
+ g.add(gm);
+ const sm=M(0xffffff,.4,0,{map:blotch(th,['#3a2410','#fff2d0'],70),clearcoat:.4,bumpMap:nz,bumpScale:1});
+ for(let i=0;i<5;i++){const s=mesh(new THREE.BoxGeometry(.9,.1,.5),sm,[.85,Y0+.12+i*.04,-.7+i*.38]);s.rotation.z=.15;s.rotation.y=(i-2)*.12;g.add(s)}
+ const sc=mesh(new THREE.SphereGeometry(.5,24,12),M(ac,.15,0,{clearcoat:1}),[-1.2,Y0+.04,.95]);sc.scale.y=.18;g.add(sc);
+ const wm=M(0xfaf6ee,.25,0,{clearcoat:.6});
+ [[0,0,1,.55],[.35,.1,.8,.35],[-.3,.25,.7,.3]].forEach(a=>{const w=mesh(new THREE.SphereGeometry(a[3],32,12),wm,[ox+.3+a[0],Y0+.76,oz-.1+a[1]]);w.scale.set(1,.1,a[2]);g.add(w)});
+ g.add(mesh(new THREE.SphereGeometry(.2,24,12),M(0xf5a300,.12,0,{clearcoat:1,clearcoatRoughness:.05}),[ox+.3,Y0+.84,oz-.1]));
+ for(let i=0;i<4;i++){const cu=new THREE.Group();cu.position.set(.1+i*.16,Y0+.04+i*.03,1.35);cu.add(mesh(new THREE.CylinderGeometry(.22,.22,.04,24),M(0x4f8a2a,.4,0,{clearcoat:.5})));cu.add(mesh(new THREE.CylinderGeometry(.17,.17,.045,24),M(0xcfe6a2,.3)));g.add(cu)}
+ const gr=M(0x3fa535,.5);for(let i=0;i<16;i++){const a=Math.random()*6.28,r=Math.random()*.55,o=mesh(new THREE.CylinderGeometry(.02,.02,.08,6),gr,[ox+Math.cos(a)*r,Y0+.8*Math.sqrt(Math.max(0,1-r*r))+.02,oz+Math.sin(a)*r]);o.rotation.set(Math.random()*3,Math.random()*3,0);g.add(o)}
+ return g}
+function icecream(col={}){const g=new THREE.Group(),a=C(col.main,'#ffd1dc'),b=C(col.accent,'#8a5a3c'),w=new THREE.Group();
+ const cone=mesh(new THREE.ConeGeometry(.65,1.6,48),M(0xd9a24a,.7,0,{bumpMap:nz,bumpScale:2}),[0,Y0+.8,0]);cone.rotation.x=Math.PI;g.add(cone);
+ const sm=c=>M(c,.35,0,{clearcoat:.4,clearcoatRoughness:.4,sheen:SH,bumpMap:nz,bumpScale:.3});
+ g.add(mesh(new THREE.SphereGeometry(.72,48,32),sm(a),[0,Y0+1.75,0]));
+ const k=mesh(new THREE.TorusGeometry(.7,.14,16,48),sm(a),[0,Y0+1.5,0]);k.rotation.x=Math.PI/2;g.add(k);
+ g.add(mesh(new THREE.SphereGeometry(.62,48,32),sm(b),[0,Y0+2.4,0]));
+ const k2=mesh(new THREE.TorusGeometry(.6,.12,16,48),sm(b),[0,Y0+2.15,0]);k2.rotation.x=Math.PI/2;g.add(k2);
+ g.add(mesh(new THREE.SphereGeometry(.16,24,16),M(0xc4161c,.15,0,{clearcoat:1}),[0,Y0+3.0,0]));
+ g.scale.setScalar(.85);w.add(g);return w}
+function cake(col={}){const g=new THREE.Group(),sp=C(col.main,'#f6dca0');
+ const sm=M(sp,.85,0,{bumpMap:nz,bumpScale:2,sheen:SH}),cr=M(0xfff8ee,.3,0,{clearcoat:.5,sheen:SH});let y=Y0;
+ for(let i=0;i<3;i++){g.add(mesh(new THREE.CylinderGeometry(1.5,1.5,.45,64),sm,[0,y+.225,0]));y+=.45;g.add(mesh(new THREE.CylinderGeometry(1.53,1.53,.12,64),cr,[0,y+.06,0]));y+=.12}
+ g.add(mesh(new THREE.CylinderGeometry(1.53,1.53,.08,64),cr,[0,y+.04,0]));
+ const rim=mesh(new THREE.TorusGeometry(1.4,.1,12,64),cr,[0,y+.1,0]);rim.rotation.x=Math.PI/2;g.add(rim);
+ const st=M(0xd4202a,.2,0,{clearcoat:1,clearcoatRoughness:.1});
+ for(let i=0;i<8;i++){const a=i*Math.PI/4,s=mesh(new THREE.SphereGeometry(.22,24,16),st,[Math.cos(a)*1.05,y+.3,Math.sin(a)*1.05]);s.scale.y=1.2;g.add(s)}
+ g.add(mesh(new THREE.SphereGeometry(.38,32,24),M(0x3b1f14,.2,0,{clearcoat:1,clearcoatRoughness:.1}),[0,y+.33,0]));return g}
+function sushi(col={}){const g=new THREE.Group(),fc=C(col.topping,'#ff8a5c');
+ for(let i=0;i<3;i++){const n=new THREE.Group();n.position.set(-1.2+i*1.2,Y0,i%2?.3:-.3);n.rotation.y=(i-1)*.25;
+  n.add(mesh(new THREE.BoxGeometry(.85,.38,.5),M(0xfbfaf5,.8,0,{bumpMap:nz,bumpScale:3,sheen:SH}),[0,.19,0]));
+  n.add(mesh(new THREE.BoxGeometry(1,.14,.6),M(fc,.2,0,{clearcoat:1,clearcoatRoughness:.15}),[0,.45,0]));
+  for(let s=-1;s<=1;s++)n.add(mesh(new THREE.BoxGeometry(.04,.145,.61),M(0xfff0e0,.3),[s*.22,.45,0]));g.add(n)}
+ const wb=mesh(new THREE.SphereGeometry(.2,24,16),M(0x7fb23a,.5),[0,Y0+.08,1.5]);wb.scale.y=.8;g.add(wb);
+ for(let i=0;i<3;i++){const gi=mesh(new THREE.SphereGeometry(.22,16,8),M(0xf3a9b8,.4,0,{clearcoat:.4}),[-1.3+i*.12,Y0+.05+i*.04,1.4]);gi.scale.set(1,.2,.8);g.add(gi)}
+ return g}
+const BUILD={burger,pizza,donut,noodle_bowl,rice_plate,icecream,cake,sushi};
+
+// ---- data: [ชื่อ, ราคา, อีโมจิ, ทรง3D, คำอธิบาย, สี, โมเดลจริง GLB]
+const RESTS=[
+{e:'🍔',n:'Smash Burger & Co.',c:'อเมริกัน',r:4.7,km:1.2,d:'เบอร์เกอร์เนื้อสแมชไฟแรง เสิร์ฟร้อนๆ ทุกชิ้น',m:[
+ ['สแมชเบอร์เกอร์เนื้อชีส',189,'🍔','burger','เนื้อย่างไฟแรง ชีสเชดดาร์เยิ้ม ผักสด ขนมปังงาหอมเนย',{},'/models/burger.glb'],
+ ['ดับเบิลเบอร์เกอร์ & เฟรนช์ฟรายส์',249,'🍟','burger','เนื้อสองชิ้น ชีสเยิ้ม พร้อมเฟรนช์ฟรายส์กรอบสีทอง',{},'/models/tasty_burger_with_fries.glb'],
+ ['โดนัทรวมรสพรีเมียม',69,'🍩','donut','โดนัทเนื้อนุ่ม เคลือบเกลซช็อกโกแลตและสตรอว์เบอร์รี',{},'/models/donuts.glb'],
+ ['ไอศกรีมช็อกโกแลตซันเดย์',79,'🍨','icecream','ไอศกรีมช็อกโกแลตเข้มข้น หอมมันกลมกล่อม',{main:'#8a5a3c',accent:'#4a2a1c'},'/models/ice_cream_chocolate.glb']]},
+{e:'🍕',n:'ลานพิซซ่า',c:'อิตาเลียน',r:4.6,km:2.4,d:'พิซซ่าแป้งบางกรอบ อบเตาฟืน',m:[
+ ['พิซซ่าเตาฟืนพรีเมียม',279,'🍕','pizza','พิซซ่าอบเตาฟืน แป้งบางกรอบ มอสซาเรลล่าและเปปเปอโรนี',{},'/models/pizza.glb'],
+ ['ริซอตโต้เห็ดทรัฟเฟิล',259,'🍚','rice_plate','ข้าวริซอตโต้ครีมเห็ดหอมกลิ่นทรัฟเฟิล โรยพาร์มีซานชีส',{main:'#fbf8ee',accent:'#b8651b',topping:'#7a4a2b'},'/models/risotto.glb'],
+ ['ซุปหัวหอมสไตล์อิตาเลียน',139,'🍲','noodle_bowl','ซุปตุ๋นเคี่ยวเข้มข้น เสิร์ฟร้อนในถ้วยพรีเมียม',{main:'#d9b98a',accent:'#8a5a3c',topping:'#3a2013'},'/models/soupe.glb'],
+ ['แครมบรูเล่วานิลลาแท้',129,'🍮','cake','แครมบรูเล่หน้าคาราเมลกรอบ เนื้อคัสตาร์ดเนียนนุ่ม',{main:'#f6dca0'},'/models/creme_brulee.glb']]},
+{e:'🍚',n:'ครัวคุณยาย',c:'อาหารไทย',r:4.8,km:.6,d:'อาหารตามสั่งรสบ้านๆ ทำสดทุกจาน',m:[
+ ['ก๋วยเตี๋ยวต้มยำกุ้งแม่น้ำ',95,'🍜','noodle_bowl','น้ำซุปต้มยำรสจัดจ้าน กุ้งตัวโต เส้นเหนียวนุ่ม ผักสด',{main:'#f3e3b0',accent:'#d2542a',topping:'#b8563a'},'/models/prawn_noodles.glb'],
+ ['ผัดหมี่โบราณสูตรคุณยาย',85,'🍝','noodle_bowl','ผัดหมี่กระทะร้อนหอมกลิ่นคั่ว รสกลมกล่อมเข้มข้น',{main:'#e8c46a',accent:'#a8541e',topping:'#7a3b24'},'/models/yakisoba.glb'],
+ ['สเต๊กเนื้อย่างจิ้มแจ่ว',199,'🥩','rice_plate','เนื้อย่างหมักสมุนไพร ฉ่ำนุ่ม หอมกลิ่นย่างไฟ',{main:'#f6f1e4',accent:'#3b2a1a',topping:'#7a4a2b'},'/models/beef_steak.glb'],
+ ['ต้มแซ่บกระดูกอ่อนสูตรโบราณ',110,'🍲','noodle_bowl','ซุปรสแซ่บถึงเครื่องสมุนไพร เคี่ยวจนกระดูกอ่อนเปื่อยนุ่ม',{main:'#d9b98a',accent:'#a8541e',topping:'#5b3622'},'/models/soupe.glb']]},
+{e:'🍣',n:'ซากุระ ราเมน & ซูชิ',c:'ญี่ปุ่น',r:4.9,km:3.1,d:'ราเมนซุปเข้มข้น ซูชิปลาสดส่งตรง',m:[
+ ['ราเมนทงคตสึสไปซี่',229,'🍜','noodle_bowl','น้ำซุปกระดูกหมูเข้มข้น เส้นเหนียวนุ่ม หมูชาชูและไข่ต้ม',{main:'#f0d58a',accent:'#d9b98a',topping:'#a86a4a'},'/models/ramen.glb'],
+ ['ซูชิเรือรวมมิตรพรีเมียม',349,'🍣','sushi','เรือซูชิรวมหน้านิกิริ แซลมอน ทูน่า สดสะอาดเกรดพรีเมียม',{topping:'#ff8a5c'},'/models/sushi_boat.glb'],
+ ['อุด้งร้อนเซ็ตญี่ปุ่น',189,'🍲','noodle_bowl','เส้นอุด้งเหนียวนุ่ม ซุปดาชิหอมกรุ่น เสิร์ฟเป็นชุดเซ็ต',{main:'#fbf8ee',accent:'#c47a2a',topping:'#d9a45a'},'/models/udon_meal.glb'],
+ ['ยากิโซบะกระทะร้อน',159,'🍝','noodle_bowl','เส้นโซบะผัดซอสหวานกลมกล่อม กะหล่ำปลีและเนื้อหมู',{main:'#e8c46a',accent:'#d9632a',topping:'#7a3b24'},'/models/yakisoba.glb']]},
+{e:'🍰',n:'Sweet Tooth Café',c:'ของหวาน & กาแฟ',r:4.5,km:.9,d:'เค้กโฮมเมด โดนัท และไอศกรีมหลากรส',m:[
+ ['เค้กช็อกโกแลตบราวนี่ฟัดจ์',139,'🎂','cake','เค้กช็อกโกแลตเนื้อแน่นเข้มข้น แต่งหน้าช็อกโกแลตฟัดจ์',{main:'#6b3e26'},'/models/chocolate_brownie_cake.glb'],
+ ['เค้กเชอร์รีดับเบิลเลเยอร์',149,'🍰','cake','เค้กครีมสดแทรกแยมผลไม้ ท็อปปิ้งเชอร์รีสด',{main:'#f6dca0'},'/models/cake_with_cherry.glb'],
+ ['บลูเบอร์รีคัพเค้กครีมชีส',89,'🧁','cake','คัพเค้กเนื้อฟู ท็อปปิ้งครีมสดและผลบลูเบอร์รีสด',{main:'#4a306d',accent:'#8a6fdf'},'/models/blueberry_cupcake.glb'],
+ ['ครัวซองต์เนยสดฝรั่งเศส',79,'🥐','donut','ครัวซองต์อบร้อน แป้งกรอบนอกนุ่มใน หอมเนยแท้',{main:'#e2b366'},'/models/croissant.glb']]}
+].map(r=>({...r,m:r.m.map(a=>({n:a[0],p:a[1],e:a[2],k:a[3],d:a[4],c:a[5]||{},glb:a[6]||''}))}));
+[[60,110],[240,215],[120,55],[340,150],[180,175]].forEach((p,i)=>RESTS[i].pos=p);
+
+// ---- state
+let cur=null,t0=0,ring=null,spin=0,vel=.4,drag=false,lx=0,auto=true,sCur=1,viewing=false,it=null,rs=null,qty=1,si=1,cart=[];
+const SIZES=[['เล็ก',.85,-10],['ปกติ',1,0],['ใหญ่',1.18,30]];
+const elastic=x=>x<=0?0:x>=1?1:Math.pow(2,-9*x)*Math.sin((x*10-.75)*(2*Math.PI/3))+1;
+const fmt=n=>'฿'+n;
+const clock=m=>{const d=new Date(Date.now()+m*60000);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const MV=[20,60,120,180,240,300,340],MH=[25,55,110,150,175,215,238];
+function route(a,b){const ia=[MV.indexOf(a[0]),MH.indexOf(a[1])],ib=[MV.indexOf(b[0]),MH.indexOf(b[1])],key=(i,j,d)=>i+','+j+','+d,dist=new Map(),prev=new Map(),pq=[[0,ia[0],ia[1],-1]],D=[[1,0],[-1,0],[0,1],[0,-1]];let end=null;dist.set(key(ia[0],ia[1],-1),0);
+ while(pq.length){pq.sort((p,q)=>p[0]-q[0]);const [c,i,j,d]=pq.shift();if(c>(dist.has(key(i,j,d))?dist.get(key(i,j,d)):1e9))continue;if(i===ib[0]&&j===ib[1]){end=key(i,j,d);break}
+  D.forEach((v,k)=>{const ni=i+v[0],nj=j+v[1];if(ni<0||nj<0||ni>=MV.length||nj>=MH.length)return;const w=Math.abs(MV[ni]-MV[i])+Math.abs(MH[nj]-MH[j])+(d>=0&&d!==k?14:0),nk=key(ni,nj,k),nc=c+w;if(nc<(dist.has(nk)?dist.get(nk):1e9)){dist.set(nk,nc);prev.set(nk,key(i,j,d));pq.push([nc,ni,nj,k])}})}
+ const pts=[];let k=end;while(k){const [i,j]=k.split(',').map(Number);pts.unshift([MV[i],MH[j]]);k=prev.get(k)}
+ return pts.filter((p,n,a)=>n===0||n===a.length-1||!((a[n-1][0]===p[0]&&p[0]===a[n+1][0])||(a[n-1][1]===p[1]&&p[1]===a[n+1][1])))}
+const routeLen=a=>a.reduce((s,p,i)=>i?s+Math.abs(p[0]-a[i-1][0])+Math.abs(p[1]-a[i-1][1]):0,0);
+function destNode(a){a=a||addr;if(!a||!a.text)return[300,55];let h=0;const t=(a.label||'')+a.text;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;return[MV[h%MV.length],MH[(h>>>8)%MH.length]]}
+function destFor(r,a){const n=destNode(a);return n[0]===r.pos[0]&&n[1]===r.pos[1]?[MV[(MV.indexOf(n[0])+2)%MV.length],n[1]]:n}
+const kmOf=r=>Math.max(.5,routeLen(route(r.pos,destFor(r)))/150);
+const eta=r=>Math.round(12+kmOf(r)*6),fee=r=>Math.round(15+kmOf(r)*7),SVC=5;
+let addr={};try{addr=JSON.parse(localStorage.getItem('addr')||'{}')}catch(e){}
+let photos={};try{photos=JSON.parse(localStorage.getItem('photos')||'{}')}catch(e){}
+const ph=x=>photos[x.n]||'';
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',2200)}
+
+// ---- 3D
+async function showModel(){
+ const myIt=it;
+ if(cur){scene.remove(cur);cur=null}
+ if(ring){scene.remove(ring);ring=null}
+ let gm=null;try{gm=await glbFor(myIt)}catch(e){}
+ if(it!==myIt)return;
+ cur=gm||BUILD[myIt.k](myIt.c);plate.visible=!gm;if(!gm&&myIt.k!=='noodle_bowl'&&myIt.k!=='sushi')organify(cur);
+ {const b=new THREE.Box3().setFromObject(cur),z=b.getSize(new THREE.Vector3());fitP={w:Math.max(z.x,z.z)/2,h:b.max.y};placeCam()}
+ setSteam(gm?0:({noodle_bowl:1.4,rice_plate:1.2,pizza:.5,burger:2.1})[myIt.k]||0);
+ cur.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ cur.scale.setScalar(.001);scene.add(cur);t0=performance.now();
+ ring=mesh(new THREE.RingGeometry(.9,1,64),new THREE.MeshBasicMaterial({color:0xffb070,transparent:true,opacity:.9,side:THREE.DoubleSide}),[0,.12,0]);ring.rotation.x=-Math.PI/2;scene.add(ring);
+}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;R.setSize(w,h,false);cam.aspect=w/h;placeCam()}
+let fitP={w:1.9,h:1.2},zoomK=1,pinch=false;
+function placeCam(){const t=Math.tan(cam.fov*Math.PI/360),w=fitP.w*1.18+.3,h=fitP.h*1.18,d=Math.max(w/(t*cam.aspect),(h+1.3)/(2*t))*1.12+.8,e=d*zoomK;cam.position.set(0,e*.46,e*.89);cam.lookAt(0,fitP.h*.38+.2,0);cam.updateProjectionMatrix()}
+addEventListener('resize',resize);
+cv.addEventListener('pointerdown',e=>{drag=true;lx=e.clientX;cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{if(drag&&!pinch){vel=(e.clientX-lx)*.012;spin+=vel;lx=e.clientX}});
+['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,()=>{drag=false;vel=Math.sign(vel||1)*.4}));
+let last=performance.now();
+(function loop(now){requestAnimationFrame(loop);const dt=(now-last)/1000;last=now;if(!viewing||!cur)return;
+ if(!drag&&auto)spin+=vel*dt;
+ const k=Math.min((now-t0)/1100,1);sCur+=(SIZES[si][1]-sCur)*Math.min(dt*8,1);
+ cur.scale.setScalar(Math.max(.001,elastic(k))*sCur);cur.position.y=(1-Math.min(k*2,1))*-.8+Math.sin(now/900)*.04*k;cur.rotation.y=spin;
+ if(ring){const q=Math.min((now-t0)/900,1);ring.scale.setScalar(1+q*3.2);ring.material.opacity=.9*(1-q);if(q>=1){scene.remove(ring);ring=null}}
+ tickSteam(now);R.render(scene,cam)})(last);
+
+// ---- screens
+function go(s){$('#home').hidden=s!=='home';$('#rest').hidden=s!=='rest';$('#back').hidden=s==='home';
+ $('#ttl').textContent=s==='home'?'🍽 ร้านอาหารใกล้คุณ':rs.e+' '+rs.n;$('#'+(s==='home'?'home':'rest')).scrollTop=0}
+let cat='ทั้งหมด',qs='';const match=r=>(cat==='ทั้งหมด'||r.c===cat)&&(!qs||(r.n+r.c+r.m.map(m=>m.n).join()).toLowerCase().includes(qs));
+function renderHome(){$('#list').innerHTML='';RESTS.filter(match).forEach(r=>{const b=document.createElement('button');b.className='rc';
+ b.innerHTML='<span class="e">'+r.e+'</span><span><b>'+r.n+'</b><small>'+r.c+' • ⭐ '+r.r+' • '+kmOf(r).toFixed(1)+' กม.</small><small>🛵 '+eta(r)+' นาที • ถึง ~'+clock(eta(r))+' น. • ค่าส่ง '+fmt(fee(r))+'</small></span>';
+ b.onclick=()=>{rs=r;const m=$('#rest');m.innerHTML='<div class="bn"><div class="e">'+r.e+'</div><h2>'+r.n+'</h2><p>'+r.d+'</p><p style="margin-top:6px">🛵 ส่งถึงประมาณ '+clock(eta(r))+' น. (~'+eta(r)+' นาที) • ค่าส่ง '+fmt(fee(r))+' • ⭐ '+r.r+'</p></div>';
+  r.m.forEach(x=>{const i=document.createElement('button');i.className='mi';
+   i.innerHTML=(ph(x)?'<img class="th" src="'+ph(x)+'">':'<span class="e">'+x.e+'</span>')+'<span class="t"><b>'+x.n+'</b><small>'+x.d+'</small><small>'+fmt(x.p)+'</small></span><span class="tag">👁 ดู 3D</span>';
+   i.onclick=()=>openView(x);m.appendChild(i)});go('rest')};
+ $('#list').appendChild(b);});if(!RESTS.some(match))$('#list').innerHTML='<p style="text-align:center;color:var(--mut)">ไม่พบร้านที่ค้นหา</p>'}
+renderHome();
+$('#chips').innerHTML=['ทั้งหมด',...new Set(RESTS.map(r=>r.c))].map(c=>'<button data-c="'+c+'">'+c+'</button>').join('');
+const hl=()=>$('#chips').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.c===cat));hl();
+$('#chips').onclick=e=>{if(e.target.dataset.c){cat=e.target.dataset.c;hl();renderHome()}};
+$('#q').oninput=e=>{qs=e.target.value.trim().toLowerCase();renderHome()};
+setInterval(()=>{const n=cart.reduce((a,c)=>a+c.q,0),t=cart.reduce((a,c)=>a+c.q*c.u,0);$('#cbar').hidden=!n;if(n)$('#cbt').textContent='🛒 '+n+' รายการ • '+fmt(t)},400);
+$('#cbar').onclick=()=>$('#cartbtn').click();
+$('#back').onclick=()=>go('home');
+
+function upd(){const s=SIZES[si],u=it.p+s[2];$('#qn').textContent=qty;$('#add').textContent='เพิ่มลงตะกร้า • '+fmt(u*qty);
+ $('#sz').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===si))}
+function openView(x){zoomK=1;$('#pimg').hidden=true;$('#ph').textContent='📷 ภาพจริง';it=x;qty=1;si=1;sCur=1;viewing=true;$('#view').hidden=false;$('#vn').textContent=x.e+' '+x.n;$('#vd').textContent=x.d+' • 🛵 ส่งถึงประมาณ '+clock(eta(rs))+' น.';upd();resize();showModel()}
+$('#sz').innerHTML=SIZES.map((s,i)=>'<button data-i="'+i+'">'+s[0]+'</button>').join('');
+$('#sz').onclick=e=>{const i=e.target.dataset.i;if(i!=null){si=+i;upd()}};
+$('#vback').onclick=()=>{viewing=false;$('#view').hidden=true};
+$('#au').onclick=()=>{auto=!auto;$('#au').style.opacity=auto?1:.5};
+$('#rp').onclick=showModel;
+$('#qm').onclick=()=>{qty=Math.max(1,qty-1);upd()};$('#qp').onclick=()=>{qty++;upd()};
+$('#add').onclick=()=>{if(cart.length&&cart[0].r!==rs.n)cart=[];cart.push({n:it.n,s:SIZES[si][0],q:qty,u:it.p+SIZES[si][2],r:rs.n,rr:rs});$('#cn').textContent=cart.reduce((a,c)=>a+c.q,0);toast('เพิ่ม '+it.n+' แล้ว ✓');viewing=false;$('#view').hidden=true};
+$('#cartbtn').onclick=()=>{const t=cart.reduce((a,c)=>a+c.q*c.u,0);
+ $('#sb').innerHTML='<h3 style="margin:0 0 10px">🛒 ตะกร้าของคุณ</h3>'+(cart.length?cart.map(c=>'<div class="row" style="justify-content:space-between"><span>'+c.n+' ('+c.s+') ×'+c.q+'<small style="display:block;color:var(--mut)">'+c.r+'</small></span><b>'+fmt(c.q*c.u)+'</b></div>').join('')+'<div class="row" style="justify-content:space-between;font-size:18px"><b>รวม</b><b>'+fmt(t)+'</b></div><div class="row"><button id="ord" class="tag" style="border:0;padding:12px;flex:1;font-size:15px">🛵 ไปหน้ายืนยันออเดอร์</button><button id="clr" class="ib">ล้าง</button></div>':'<p style="color:var(--mut)">ยังไม่มีรายการ</p>')+'<button id="sx" class="ib" style="width:100%">ปิด</button>';
+ $('#sheet').hidden=false;
+ const x=()=>$('#sheet').hidden=true;$('#sx').onclick=x;
+ if($('#ord'))$('#ord').onclick=()=>checkout(t);
+ if($('#clr'))$('#clr').onclick=()=>{cart=[];$('#cn').textContent=0;x()}};
+$('#sheet').onclick=e=>{if(e.target.id==='sheet')$('#sheet').hidden=true};
+
+// ---- real-photo upload (per dish, kept in this browser)
+async function setPhoto(f){const im=await createImageBitmap(f),m=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*m);c.height=Math.round(im.height*m);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+ photos[it.n]=c.toDataURL('image/jpeg',.75);let ok=true;try{localStorage.setItem('photos',JSON.stringify(photos))}catch(e){ok=false}
+ const p=$('#pimg');p.src=photos[it.n];p.hidden=false;$('#ph').textContent='🧊 กลับเป็น 3D';toast(ok?'บันทึกรูปแล้ว ✓':'ใช้ได้ชั่วคราว (พื้นที่เก็บเต็ม)')}
+$('#up').onclick=()=>$('#pf').click();
+$('#pf').onchange=e=>{const f=e.target.files[0];if(f)setPhoto(f);e.target.value=''};
+$('#ph').onclick=()=>{if(!ph(it))return $('#pf').click();const p=$('#pimg');p.hidden=!p.hidden;p.src=ph(it);$('#ph').textContent=p.hidden?'📷 ภาพจริง':'🧊 กลับเป็น 3D'};
+
+// ---- payment: PromptPay QR (EMVCo) / card demo / cash
+function crc16(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=c&0x8000?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF}return c.toString(16).toUpperCase().padStart(4,'0')}
+function ppPayload(id,amt){const f=(t,v)=>t+String(v.length).padStart(2,'0')+v;let tag='01',v=id;
+ if(id.length===13){tag='02'}else{v='0066'+id.slice(1)}
+ const p=f('00','01')+f('01','12')+f('29',f('00','A000000677010111')+f(tag,v))+f('53','764')+f('54',amt.toFixed(2))+f('58','TH')+'6304';return p+crc16(p)}
+function payStep(t,order){const sb=$('#sb'),close=()=>$('#sheet').hidden=true,btn='border:0;padding:13px;width:100%;font-size:15px;margin-top:8px';
+ const done=m=>{order.no='A'+Math.floor(1000+Math.random()*9000);cart=[];$('#cn').textContent=0;close();startTrack(order,m);return;const no=order.no;
+  sb.innerHTML='<div style="text-align:center;font-size:54px">✅</div><h3 style="text-align:center;margin:0 0 4px">ชำระเงินสำเร็จ</h3><p style="text-align:center;color:var(--mut);margin:0 0 12px">ออเดอร์ #'+no+' • '+m+'</p>'+cart.map(c=>'<div class="row" style="justify-content:space-between"><span>'+c.n+' ('+c.s+') ×'+c.q+'</span><span>'+fmt(c.q*c.u)+'</span></div>').join('')+'<div class="row" style="justify-content:space-between;font-size:18px"><b>รวม</b><b>'+fmt(t)+'</b></div><button id="fin" class="tag" style="'+btn+'">เสร็จสิ้น</button>';
+  $('#fin').onclick=()=>{cart=[];$('#cn').textContent=0;close()}};
+ const menu=()=>{let saved='';try{saved=localStorage.getItem('pp')||''}catch(e){}
+  sb.innerHTML='<h3 style="margin:0">ชำระเงิน '+fmt(t)+'</h3><small style="color:var(--mut)">เบอร์พร้อมเพย์ (10 หลัก) หรือเลขผู้เสียภาษี (13 หลัก) ของร้าน</small><input id="ppid" class="in" inputmode="numeric" placeholder="0812345678" value="'+saved+'"><button id="m1" class="mi"><span class="e">📱</span><span class="t"><b>พร้อมเพย์ (สแกน QR)</b><small>สแกนจากแอปธนาคารได้ทุกธนาคาร</small></span></button><button id="m2" class="mi" style="margin-top:8px"><span class="e">💳</span><span class="t"><b>บัตรเครดิต/เดบิต</b><small>เดโม — ไม่เก็บข้อมูลบัตรจริง</small></span></button><button id="m3" class="mi" style="margin-top:8px"><span class="e">💵</span><span class="t"><b>เงินสดปลายทาง</b><small>จ่ายเมื่อรับอาหาร</small></span></button><button id="mx" class="ib" style="'+btn+'">ปิด</button>';
+  $('#mx').onclick=close;$('#m3').onclick=()=>done('เงินสดปลายทาง');
+  $('#m2').onclick=()=>{sb.innerHTML='<p style="text-align:center;padding:30px">💳 กำลังประมวลผลบัตร…</p>';setTimeout(()=>done('บัตร (เดโม)'),1600)};
+  $('#m1').onclick=()=>{const id=$('#ppid').value.replace(/\D/g,'');if(id.length!==10&&id.length!==13){toast('ใส่เบอร์ 10 หลัก หรือเลขผู้เสียภาษี 13 หลัก');return}
+   try{localStorage.setItem('pp',id)}catch(e){}
+   const pl=ppPayload(id,t);let im='';try{const q=qrcode(0,'M');q.addData(pl);q.make();im='<img src="'+q.createDataURL(6,2)+'" style="width:240px;height:240px;image-rendering:pixelated;background:#fff;border-radius:12px">';}catch(e){im='<p style="word-break:break-all;font-size:11px">'+pl+'</p>'}
+   sb.innerHTML='<div style="text-align:center"><h3 style="margin:0">สแกนเพื่อจ่าย '+fmt(t)+'</h3><p style="color:var(--mut);margin:4px 0 10px;font-size:13px">พร้อมเพย์ •••'+id.slice(-4)+'</p>'+im+'<p style="color:var(--mut);font-size:12px">เปิดแอปธนาคาร → สแกน QR → ยืนยันยอดตามที่แสดง</p></div><button id="pd" class="tag" style="'+btn+'">ฉันโอนแล้ว ✓</button><button id="pb" class="ib" style="'+btn+'">← เลือกวิธีอื่น</button>';
+   $('#pd').onclick=()=>done('พร้อมเพย์');$('#pb').onclick=menu}};
+ menu()}
+
+// ---- delivery: address, order summary, rider tracking
+const BT='border:0;padding:13px;width:100%;font-size:15px;margin-top:8px';
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=v=>(v<0?'-':'')+fmt(Math.abs(v));
+function setAt(){$('#at').textContent=addr.text?(addr.label||'ที่อยู่')+' • '+addr.text:'ตั้งที่อยู่จัดส่ง'}
+function editAddr(after){const sb=$('#sb');let lb=addr.label||'บ้าน';$('#sheet').hidden=false;
+ sb.innerHTML=`<h3 style="margin:0 0 8px">📍 ที่อยู่จัดส่ง</h3><div class="row" id="lbs">${['บ้าน','ที่ทำงาน','อื่นๆ'].map(l=>`<button class="ib" data-l="${l}">${l}</button>`).join('')}</div>
+ <input id="an" class="in" style="margin-top:0" placeholder="ชื่อผู้รับ • เบอร์โทร" value="${esc(addr.who)}">
+ <textarea id="at2" class="in" rows="3" placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์">${esc(addr.text)}</textarea>
+ <input id="ad" class="in" placeholder="รายละเอียดเพิ่มเติม เช่น ตึก ชั้น ห้อง จุดสังเกต" value="${esc(addr.detail)}">
+ <button id="gps" class="ib" style="width:100%">🎯 ใช้ตำแหน่งปัจจุบัน</button><button id="sv" class="tag" style="${BT}">บันทึกที่อยู่</button><button id="cx" class="ib" style="${BT}">ยกเลิก</button>`;
+ const chips=()=>sb.querySelectorAll('#lbs button').forEach(b=>b.style.outline=b.dataset.l===lb?'2px solid var(--ac)':'none');chips();
+ $('#lbs').onclick=e=>{if(e.target.dataset.l){lb=e.target.dataset.l;chips()}};
+ $('#cx').onclick=()=>$('#sheet').hidden=true;
+ $('#gps').onclick=()=>{if(!navigator.geolocation)return toast('เครื่องนี้ไม่รองรับตำแหน่ง');navigator.geolocation.getCurrentPosition(p=>{$('#at2').value='ตำแหน่งปัจจุบัน ('+p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5)+') — แก้เป็นที่อยู่จริงได้'},()=>toast('ขอตำแหน่งไม่ได้ — พิมพ์ที่อยู่แทนได้'))};
+ $('#sv').onclick=()=>{const who=$('#an').value.trim(),text=$('#at2').value.trim();if(!who||text.length<8){toast('กรอกชื่อ-เบอร์ และที่อยู่ให้ครบ');return}
+  addr={label:lb,who,text,detail:$('#ad').value.trim()};try{localStorage.setItem('addr',JSON.stringify(addr))}catch(e){}
+  setAt();renderHome();after?after():$('#sheet').hidden=true}}
+$('#addr').onclick=()=>editAddr();
+
+function checkout(sub){const sb=$('#sb'),r=cart[0].rr,f0=fee(r);let f=f0,pri=0;
+ if(!addr.text)return editAddr(()=>checkout(sub));
+ let disc=0,code='',note='';
+ const draw=()=>{const total=Math.max(0,sub+f+SVC-disc),rows=[['ค่าอาหาร',sub],['ค่าส่ง ('+kmOf(r).toFixed(1)+' กม.)',f],['ค่าบริการ',SVC]];if(disc)rows.push(['ส่วนลด',-disc]);
+  sb.innerHTML=`<h3 style="margin:0 0 10px">ยืนยันออเดอร์</h3>
+  <div class="bn" style="padding:12px;margin-bottom:10px"><b>📍 ${esc(addr.label)} • ${esc(addr.who)}</b><p>${esc(addr.text)}${addr.detail?' ('+esc(addr.detail)+')':''}</p><button id="ea" class="ib" style="margin-top:8px">แก้ไขที่อยู่</button></div>
+  <input id="nt" class="in" style="margin-top:0" placeholder="โน้ตถึงไรเดอร์/ร้าน (ไม่ใส่ผัก, วางไว้หน้าห้อง ฯลฯ)" value="${esc(note)}">
+  <div class="row"><input id="cp" class="in" style="margin:0;flex:1" placeholder="โค้ดส่วนลด (ลอง SAVE30)" value="${esc(code)}"><button id="ca" class="ib">ใช้โค้ด</button></div>
+  <div class="row"><button class="ib" id="o0" style="flex:1;${pri?'':'outline:2px solid var(--ac)'}">🛵 ธรรมดา<br><small>~${eta(r)} นาที • ถึง ${clock(eta(r))}</small></button><button class="ib" id="o1" style="flex:1;${pri?'outline:2px solid var(--ac)':''}">⚡ ด่วน +฿15<br><small>~${Math.max(8,eta(r)-8)} นาที • ถึง ${clock(Math.max(8,eta(r)-8))}</small></button></div>
+  ${rows.map(a=>`<div class="row" style="justify-content:space-between;margin-bottom:4px"><span>${a[0]}</span><span>${money(a[1])}</span></div>`).join('')}
+  <div class="row" style="justify-content:space-between;font-size:18px;margin-top:8px"><b>รวมทั้งหมด</b><b>${fmt(total)}</b></div>
+  <button id="go" class="tag" style="${BT}">ไปชำระเงิน • ${fmt(total)}</button><button id="bk" class="ib" style="${BT}">← กลับตะกร้า</button>`;
+  $('#ea').onclick=()=>{note=$('#nt').value;editAddr(draw)};
+  $('#ca').onclick=()=>{note=$('#nt').value;code=$('#cp').value.trim().toUpperCase();const v={SAVE30:30,FIRST50:50}[code];if(v){disc=Math.min(v,sub);toast('ใช้โค้ดแล้ว ✓')}else{disc=0;toast('โค้ดไม่ถูกต้อง')}draw()};
+  $('#bk').onclick=()=>$('#cartbtn').click();
+  $('#o0').onclick=()=>{note=$('#nt').value;pri=0;f=f0;draw()};$('#o1').onclick=()=>{note=$('#nt').value;pri=1;f=f0+15;draw()};
+  $('#go').onclick=()=>{note=$('#nt').value;payStep(total,{rest:r,items:cart.map(c=>({...c})),sub,fee:f,svc:SVC,disc,total,addr:{...addr},note,eta:pri?Math.max(8,eta(r)-8):eta(r)})}};
+ draw()}
+
+let tk=null;
+const STEPS=['รับออเดอร์','เตรียมอาหาร','ไรเดอร์รับของ','กำลังส่ง','ถึงแล้ว'],TTL=['ร้านรับออเดอร์แล้ว','ร้านกำลังเตรียมอาหาร','ไรเดอร์รับอาหารแล้ว','ไรเดอร์กำลังไปส่งคุณ','ถึงแล้ว! รับอาหารได้เลย 🎉'];
+const RIDERS=[['สมชาย ใจดี','กท 1234','🧑'],['วิภา สุขสันต์','ขข 5678','👩'],['ธนากร มั่นคง','คง 2468','🧔']];
+const vb={x:0,y:0,w:360};
+function buildMap(){let sd=11;const R=()=>(sd=sd*16807%2147483647)/2147483647;
+ const V=[20,60,120,180,240,300,340],H=[25,55,110,150,175,215,238],MX=[60,180,300],MY=[55,110,175,215],xs=[0,...V,360],ys=[0,...H,250],P=['#dcd6c8','#d3cdbf','#e2ddd0','#cfc9ba','#e6e1d5'];
+ let o='<rect width="360" height="250" fill="#ebe7dc"/>';
+ for(let i=0;i<xs.length-1;i++)for(let j=0;j<ys.length-1;j++){
+  const x0=xs[i]+(i?8:0),x1=xs[i+1]-(i<xs.length-2?8:0),y0=ys[j]+(j?8:0),y1=ys[j+1]-(j<ys.length-2?8:0),w=x1-x0,h=y1-y0;if(w<8||h<8)continue;
+  if(R()<.13){o+=`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="3" fill="#cfe5c3"/>`;for(let k=0;k<Math.floor(w*h/90);k++)o+=`<circle cx="${(x0+3+R()*(w-6)).toFixed(1)}" cy="${(y0+3+R()*(h-6)).toFixed(1)}" r="${(1.8+R()*1.6).toFixed(1)}" fill="#8fc27a"/>`;continue}
+  const nx=w>40?2+(R()<.5?1:0):1,ny=h>35?2:1,bw=w/nx,bh=h/ny;
+  for(let a=0;a<nx;a++)for(let b=0;b<ny;b++){const bx=x0+a*bw+1,by=y0+b*bh+1,ww=bw-2,hh=bh-2,c=P[Math.floor(R()*P.length)];
+   o+=`<rect x="${(bx+1.6).toFixed(1)}" y="${(by+1.6).toFixed(1)}" width="${ww.toFixed(1)}" height="${hh.toFixed(1)}" fill="#0002"/><rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${ww.toFixed(1)}" height="${hh.toFixed(1)}" fill="${c}" stroke="#bdb6a4" stroke-width=".4"/>`;
+   if(ww>10&&hh>8)o+=`<rect x="${(bx+ww*.2).toFixed(1)}" y="${(by+hh*.2).toFixed(1)}" width="${(ww*.6).toFixed(1)}" height="${(hh*.6).toFixed(1)}" fill="#0000000d"/>`}}
+ o+='<path d="M-10,138 C80,122 150,170 250,146 S340,152 380,140" fill="none" stroke="#bcd9ee" stroke-width="27"/><path d="M-10,138 C80,122 150,170 250,146 S340,152 380,140" fill="none" stroke="#a5cfec" stroke-width="23"/>';
+ const ln=(x1,y1,x2,y2,c,w,d)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"${d?' stroke-dasharray="'+d+'"':''}/>`;
+ const minor=V.filter(x=>!MX.includes(x)).map(x=>[x,0,x,250]).concat(H.filter(y=>!MY.includes(y)).map(y=>[0,y,360,y])),main=MX.map(x=>[x,0,x,250]).concat(MY.map(y=>[0,y,360,y]));
+ minor.forEach(l=>o+=ln(...l,'#d9d3c4',9));minor.forEach(l=>o+=ln(...l,'#fff',7));
+ main.forEach(l=>o+=ln(...l,'#e3c36a',15));main.forEach(l=>o+=ln(...l,'#ffeab0',13));main.forEach(l=>o+=ln(...l,'#fff',.6,'4 4'));
+ [[64,95,'ถ.สุขุมวิท',-90],[184,100,'ถ.เพชรบุรี',-90],[304,200,'ถ.พระราม 9',-90],[200,108,'ถ.ราชดำริ',0],[100,173,'ถ.สีลม',0],[250,213,'ถ.สาทร',0]].forEach(t=>o+=`<text x="${t[0]}" y="${t[1]}" font-size="5.5" fill="#8a8470" transform="rotate(${t[3]} ${t[0]} ${t[1]})">${t[2]}</text>`);
+  return o}
+function camTo(pt,s){if(!mAuto)return;const z=s===0||s===4?1:s===3?2.3:1.7,w=360/z,h=w*250/360,tx=Math.min(360-w,Math.max(0,pt.x-w/2)),ty=Math.min(250-h,Math.max(0,pt.y-h/2)),k=z===1?.08:.07;
+ vb.x+=(tx-vb.x)*k;vb.y+=(ty-vb.y)*k;vb.w+=(w-vb.w)*k;mapRender()}
+$('#map').innerHTML='<g id="mg">'+buildMap()+'<g id="dyn"></g></g>';
+function startTrack(o,m){vb.x=0;vb.y=0;vb.w=360;mAuto=true;mRot=0;const rd=RIDERS[Math.floor(Math.random()*3)];tk={o,m,rd,t0:performance.now(),s:-1,stars:0,arr:clock(o.eta||eta(o.rest))};dynMap(o);$('#track').hidden=false;
+ $('#tc').innerHTML=`<div class="rd" style="justify-content:space-between"><span>🕒 ถึงประมาณ</span><b style="font-size:24px">${tk.arr} น.</b><span id="er" style="color:var(--ac);font-weight:700"></span></div><div class="stp">${STEPS.map(s=>`<span>${s}</span>`).join('')}</div><div class="bar"><i id="bi"></i></div><div id="rdc"></div>
+ <details class="bn" style="padding:12px;margin-bottom:12px"><summary><b>รายละเอียดออเดอร์ #${o.no}</b></summary><p style="margin-top:8px"><b>${esc(o.rest.n)}</b></p>
+ ${o.items.map(c=>`<div class="row" style="justify-content:space-between;margin:0"><span>${esc(c.n)} (${c.s}) ×${c.q}</span><span>${fmt(c.q*c.u)}</span></div>`).join('')}
+ <div class="row" style="justify-content:space-between;margin:6px 0 0"><span>ค่าส่ง+บริการ${o.disc?' − ส่วนลด':''}</span><span>${money(o.fee+o.svc-o.disc)}</span></div>
+ <div class="row" style="justify-content:space-between;margin:0"><b>รวม • ${esc(m)}</b><b>${fmt(o.total)}</b></div>
+ <p style="margin-top:8px">📍 ${esc(o.addr.who)} — ${esc(o.addr.text)}${o.addr.detail?' ('+esc(o.addr.detail)+')':''}</p>${o.note?'<p>📝 '+esc(o.note)+'</p>':''}</details><div id="fb"></div>`;
+ requestAnimationFrame(trackLoop)}
+function trackLoop(now){if(!tk||$('#track').hidden)return;const t=(now-tk.t0)/1000,T=[4,14,18,38],s=t<T[0]?0:t<T[1]?1:t<T[2]?2:t<T[3]?3:4;
+ const p0=$('#p0'),p1=$('#p1');let pa=p0,pr=0;
+ if(t<T[0])pr=0;else if(t<T[1])pr=(t-T[0])/(T[1]-T[0]);else if(t<T[2])pr=1;else{pa=p1;pr=Math.min(1,(t-T[2])/(T[3]-T[2]))}
+ const L=pa.getTotalLength(),pt=pa.getPointAtLength(pr*L),p2=pa.getPointAtLength(Math.min(L,pr*L+3));if(Math.hypot(p2.x-pt.x,p2.y-pt.y)>.1)tk.ang=Math.atan2(p2.y-pt.y,p2.x-pt.x)*180/Math.PI;$('#rid').setAttribute('transform','translate('+pt.x+','+pt.y+')');$('#rar').setAttribute('transform','rotate('+(tk.ang||0)+')');camTo(pt,s);
+ const rem=Math.max(0,Math.ceil((T[3]-t)/T[3]*(tk.o.eta||eta(tk.o.rest))));$('#ts').textContent=TTL[s];$('#te').textContent=s<4?'ถึงประมาณ '+tk.arr+' น. • อีก ~'+rem+' นาที (เดโมเร่งเวลา)':'ส่งสำเร็จ '+clock(0)+' น.';$('#er').textContent=s<4?'อีก ~'+rem+' นาที':'ถึงแล้ว ✓';
+ if(tk.s!==s){tk.s=s;$('#bi').style.width=(s/4*100)+'%';document.querySelectorAll('.stp span').forEach((e,i)=>e.classList.toggle('on',i<=s));
+  const r=tk.rd;$('#rdc').innerHTML=s===0?'<div class="rd"><span style="font-size:30px">🔍</span><span>กำลังหาไรเดอร์ใกล้ร้าน…</span></div>':`<div class="rd"><span style="font-size:36px">${r[2]}</span><span style="flex:1"><b>${r[0]}</b><small style="display:block;color:var(--mut)">🛵 ${r[1]} • ⭐ 4.9</small></span><button class="ib" id="rc">📞</button><button class="ib" id="rm">💬</button></div>`;
+  if($('#rc')){$('#rc').onclick=$('#rm').onclick=()=>toast('เดโม: โทร/แชทกับไรเดอร์จริงยังไม่รองรับ')}
+  if(s===4){$('#fb').innerHTML='<div class="bn" style="text-align:center"><b>ให้คะแนนไรเดอร์</b><div id="st" style="font-size:30px;margin:8px 0">☆☆☆☆☆</div><button id="fx" class="tag" style="'+BT+'">เสร็จสิ้น</button></div>';
+   $('#st').onclick=e=>{const w=$('#st').getBoundingClientRect();tk.stars=Math.max(1,Math.ceil((e.clientX-w.left)/w.width*5));$('#st').textContent='★'.repeat(tk.stars)+'☆'.repeat(5-tk.stars)};
+   $('#fx').onclick=()=>{tk=null;$('#track').hidden=true;go('home');toast('ขอบคุณที่ใช้บริการ 💚')}}}
+ requestAnimationFrame(trackLoop)}
+$('#tb').onclick=()=>{tk=null;$('#track').hidden=true;go('home')};
+setAt();
+
+// ---- real scanned models (.glb) per dish, stored in this browser (IndexedDB) and loaded from high-fidelity 3D assets
+const dbo=()=>new Promise((res,rej)=>{const r=indexedDB.open('food3d',1);r.onupgradeneeded=()=>r.result.createObjectStore('m');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+async function dbGet(k){const d=await dbo();return new Promise((res,rej)=>{const q=d.transaction('m').objectStore('m').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
+async function dbSet(k,v){const d=await dbo();return new Promise((res,rej)=>{const t=d.transaction('m','readwrite'),s=t.objectStore('m');v?s.put(v,k):s.delete(k);t.oncomplete=res;t.onerror=()=>rej(t.error)})}
+function fitGlb(o){const w=new THREE.Group();w.add(o);const b=new THREE.Box3().setFromObject(o),sz=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3()),k=2.8/Math.max(sz.x,sz.y,sz.z,.001);
+ o.scale.multiplyScalar(k);o.position.set(-c.x*k,-b.min.y*k+Y0,-c.z*k);
+ o.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;if(m.material){m.material.envMapIntensity=1.2;if(m.material.map)m.material.map.encoding=THREE.sRGBEncoding}}});return w}
+
+const modelCache=new Map();
+async function glbFor(x){
+ let dbM=null;try{dbM=await dbGet(x.n)}catch(e){}
+ if(dbM&&THREE.GLTFLoader){
+  return new Promise((res,rej)=>new THREE.GLTFLoader().parse(dbM,'',g=>res(fitGlb(g.scene)),rej));
+ }
+ if(!x.glb||!THREE.GLTFLoader)return null;
+ if(modelCache.has(x.glb)){
+  return fitGlb(modelCache.get(x.glb).clone(true));
+ }
+ return new Promise(res=>{
+  new THREE.GLTFLoader().load(x.glb,g=>{
+   modelCache.set(x.glb,g.scene);
+   res(fitGlb(g.scene.clone(true)));
+  },undefined,()=>{res(null)});
+ });
+}
+
+// Background preloading for instant 3D view
+setTimeout(()=>{
+ if(!THREE.GLTFLoader)return;
+ const l=new THREE.GLTFLoader();
+ const urls=[...new Set(RESTS.flatMap(r=>r.m.map(i=>i.glb)).filter(Boolean))];
+ urls.forEach(u=>{if(!modelCache.has(u))l.load(u,g=>{if(!modelCache.has(u))modelCache.set(u,g.scene)},undefined,()=>{})});
+},300);
+
+$('#gb').onclick=()=>THREE.GLTFLoader?$('#gf').click():toast('โหลดตัวอ่านโมเดลไม่สำเร็จ ลองรีเฟรชหน้า');
+$('#gf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const buf=await f.arrayBuffer();
+ if(new TextDecoder().decode(buf.slice(0,4))!=='glTF'){toast('ไฟล์ต้องเป็น .glb');return}
+ try{await dbSet(it.n,buf)}catch(err){toast('บันทึกไม่ได้ (พื้นที่เก็บเต็ม)')}
+ try{await showModel();toast('ใช้โมเดลจริงแล้ว ✓')}catch(err){await dbSet(it.n,null);toast('อ่านไฟล์โมเดลไม่ได้ ลองไฟล์อื่น');showModel()}};
+$('#gd').onclick=async()=>{await dbSet(it.n,null);showModel();toast('กลับไปใช้โมเดลเดิม')};
+
+// ---- organic irregularity (no perfect geometric shapes) + steam
+const hs=(x,y,z)=>{const s=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453;return s-Math.floor(s)};
+function vn(x,y,z){const ix=Math.floor(x),iy=Math.floor(y),iz=Math.floor(z),fx=x-ix,fy=y-iy,fz=z-iz,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy),w=fz*fz*(3-2*fz),l=(a,b,t)=>a+(b-a)*t;
+ return l(l(l(hs(ix,iy,iz),hs(ix+1,iy,iz),u),l(hs(ix,iy+1,iz),hs(ix+1,iy+1,iz),u),v),l(l(hs(ix,iy,iz+1),hs(ix+1,iy,iz+1),u),l(hs(ix,iy+1,iz+1),hs(ix+1,iy+1,iz+1),u),v),w)}
+const fbm=(x,y,z)=>vn(x,y,z)*.65+vn(x*2.3+7,y*2.3,z*2.3)*.35-.5;
+function organify(root){root.traverse(m=>{if(!m.isMesh||m.isInstancedMesh)return;const g=m.geometry,t=g.type;if(!/^(Sphere|Cylinder|Torus)Geometry$/.test(t))return;
+ g.computeBoundingBox();const bb=g.boundingBox,sz=bb.getSize(new THREE.Vector3()),c=bb.getCenter(new THREE.Vector3()),dim=Math.max(sz.x,sz.y,sz.z),A=dim*(t[0]==='C'?.012:.02),p=g.attributes.position,n=g.attributes.normal;
+ for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i);let dx,dy,dz;
+  if(t[0]==='C'){dx=x-c.x;dy=0;dz=z-c.z;const l=Math.hypot(dx,dz);if(l<1e-4)continue;dx/=l;dz/=l}else{dx=n.getX(i);dy=n.getY(i);dz=n.getZ(i)}
+  const k=fbm(x*2.2,y*2.2,z*2.2)*A*2;p.setXYZ(i,x+dx*k,y+dy*k,z+dz*k)}
+ p.needsUpdate=true;g.computeBoundingSphere()})}
+const STX=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,2,32,32,32);r.addColorStop(0,'rgba(255,255,255,.55)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
+let steam=null,steamY=0;
+function setSteam(y){if(steam){scene.remove(steam);steam=null}steamY=y;if(!y)return;steam=new THREE.Group();
+ for(let i=0;i<14;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:STX,transparent:true,depthWrite:false,opacity:0,fog:false}));s.userData={ph:Math.random(),x:(Math.random()-.5)*1.6,z:(Math.random()-.5)*1.6,sp:.16+Math.random()*.1};steam.add(s)}scene.add(steam)}
+function tickSteam(now){if(!steam)return;steam.children.forEach(s=>{const u=s.userData,p=((now/1000)*u.sp+u.ph)%1;s.position.set(u.x+Math.sin(p*6+u.ph*9)*.15,steamY+p*1.8,u.z);s.scale.setScalar(.5+p*1.3);s.material.opacity=Math.sin(p*Math.PI)*.16})}
+
+// ---- food photos for the menu: render each 3D dish to a picture
+const thumbs={};
+function snap(x){if(thumbs[x.n])return thumbs[x.n];
+ const oc=cam.position.clone(),oa=cam.aspect,ovp=plate.visible,pr=R.getPixelRatio(),sz=R.getSize(new THREE.Vector2());let m=null,url='';
+ try{if(cur)cur.visible=false;if(steam)steam.visible=false;if(ring)ring.visible=false;
+  if(modelCache.has(x.glb)){m=fitGlb(modelCache.get(x.glb).clone(true));plate.visible=false}
+  else{m=BUILD[x.k](x.c);if(x.k!=='noodle_bowl'&&x.k!=='sushi')organify(m);plate.visible=true}
+  m.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});scene.add(m);
+  const h=new THREE.Box3().setFromObject(m).max.y;
+  R.setPixelRatio(1);R.setSize(320,320,false);R.setClearColor(0x120e0a,1);
+  cam.aspect=1;cam.position.set(0,4.6+h*.5,8.8+Math.max(0,h-1.6)*2.2);cam.lookAt(0,.5+h*.3,0);cam.updateProjectionMatrix();
+  R.render(scene,cam);url=cv.toDataURL('image/jpeg',.88)}catch(e){url=''}
+ if(m)scene.remove(m);
+ R.setClearColor(0x000000,0);R.setPixelRatio(pr);R.setSize(sz.x,sz.y,false);cam.aspect=oa;cam.position.copy(oc);cam.lookAt(0,.9,0);cam.updateProjectionMatrix();
+ plate.visible=ovp;if(cur)cur.visible=true;if(steam)steam.visible=true;if(ring)ring.visible=true;
+ if(url)thumbs[x.n]=url;return url}
+
+// ---- 3D zoom: wheel, pinch, buttons, double-tap reset
+function zoom(f){zoomK=Math.min(2.4,Math.max(.45,zoomK*f));placeCam()}
+const ptrs=new Map();let pd=0;const pdist=()=>{const a=[...ptrs.values()];return Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1};
+cv.addEventListener('pointerdown',e=>{ptrs.set(e.pointerId,[e.clientX,e.clientY]);if(ptrs.size===2){pinch=true;pd=pdist()}});
+cv.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);if(ptrs.size===2){const d=pdist();if(pd)zoom(pd/d);pd=d}});
+['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,e=>{ptrs.delete(e.pointerId);if(ptrs.size<2){pinch=false;pd=0}}));
+cv.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.1:.91)},{passive:false});
+cv.addEventListener('dblclick',()=>{zoomK=1;placeCam()});
+$('#zi').onclick=()=>zoom(.8);$('#zo').onclick=()=>zoom(1.25);
+
+// ---- map: pan / zoom / rotate by hand (🎯 = follow rider again)
+let mAuto=true,mRot=0,mpd=0,mpa=0;const mp=new Map(),mm=$('#map'),mh=()=>vb.w*250/360,mpts=()=>[...mp.values()];
+function mapRender(){const cx=vb.x+vb.w/2,cy=vb.y+mh()/2;mm.setAttribute('viewBox',vb.x.toFixed(1)+' '+vb.y.toFixed(1)+' '+vb.w.toFixed(1)+' '+mh().toFixed(1));$('#mg').setAttribute('transform','rotate('+mRot.toFixed(1)+' '+cx.toFixed(1)+' '+cy.toFixed(1)+')')}
+function mapZoom(f){mAuto=false;const cx=vb.x+vb.w/2,cy=vb.y+mh()/2;vb.w=Math.min(520,Math.max(55,vb.w*f));vb.x=cx-vb.w/2;vb.y=cy-mh()/2;mapRender()}
+mm.addEventListener('pointerdown',e=>{mm.setPointerCapture(e.pointerId);mp.set(e.pointerId,[e.clientX,e.clientY]);if(mp.size===2){const[a,b]=mpts();mpd=Math.hypot(a[0]-b[0],a[1]-b[1])||1;mpa=Math.atan2(b[1]-a[1],b[0]-a[0])}});
+mm.addEventListener('pointermove',e=>{const p=mp.get(e.pointerId);if(!p)return;const ox=p[0],oy=p[1];mp.set(e.pointerId,[e.clientX,e.clientY]);
+ if(mp.size===1){mAuto=false;const k=vb.w/mm.clientWidth,dx=(e.clientX-ox)*k,dy=(e.clientY-oy)*k,r=mRot*Math.PI/180,c=Math.cos(r),s=Math.sin(r);vb.x-=dx*c+dy*s;vb.y-=-dx*s+dy*c;mapRender()}
+ else if(mp.size===2){const[a,b]=mpts(),d=Math.hypot(a[0]-b[0],a[1]-b[1])||1,an=Math.atan2(b[1]-a[1],b[0]-a[0]);mRot+=(an-mpa)*180/Math.PI;mpa=an;const f=mpd/d;mpd=d;mapZoom(f)}});
+['pointerup','pointercancel'].forEach(n=>mm.addEventListener(n,e=>mp.delete(e.pointerId)));
+mm.addEventListener('wheel',e=>{e.preventDefault();mapZoom(e.deltaY>0?1.12:.89)},{passive:false});
+$('#mzi').onclick=()=>mapZoom(.8);$('#mzo').onclick=()=>mapZoom(1.25);
+$('#mrl').onclick=()=>{mAuto=false;mRot-=45;mapRender()};$('#mrr').onclick=()=>{mAuto=false;mRot+=45;mapRender()};$('#mre').onclick=()=>{mAuto=true;mRot=0};
+
+// ---- per-order map: restaurant, delivery spot and rider start all differ
+const pin=(x,y,c,e)=>`<g transform="translate(${x},${y})"><ellipse cy="1.5" rx="6" ry="2.2" fill="#0003"/><path d="M0,0 L-7,-11 A8.5,8.5 0 1 1 7,-11 Z" fill="${c}"/><circle cy="-15" r="5.6" fill="#fff"/><text y="-12" font-size="7.5" text-anchor="middle">${e}</text></g>`;
+function dynMap(o){const rp=o.rest.pos,dp=destFor(o.rest,o.addr);let h=0;const t=o.no||'x';for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;
+ const cand=[];MV.forEach(x=>MH.forEach(y=>{const d=Math.abs(x-rp[0])+Math.abs(y-rp[1]);if(d>=90&&d<=260)cand.push([x,y])}));const sp=cand[h%cand.length];
+ const P=a=>'M'+a.map(p=>p.join(',')).join(' L'),r0=route(sp,rp),r1=route(rp,dp),ic={'บ้าน':'🏠','ที่ทำงาน':'🏢'}[o.addr.label]||'📍';
+ $('#dyn').innerHTML=`<path id="p0" d="${P(r0)}" fill="none" stroke="#7b8" stroke-width="2" stroke-dasharray="4 3"/><path d="${P(r1)}" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path id="p1" d="${P(r1)}" fill="none" stroke="#00b14f" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>${pin(rp[0],rp[1],'#e4572e',o.rest.e)}${pin(dp[0],dp[1],'#00b14f',ic)}<g id="rid" transform="translate(${sp[0]},${sp[1]})"><circle class="pu" r="9" fill="#00b14f" opacity=".5"/><g id="rar"><path d="M13,0 L7,-5 L7,5Z" fill="#00b14f"/></g><circle r="9" fill="#fff" stroke="#00b14f" stroke-width="2"/><text y="4" font-size="11" text-anchor="middle">🛵</text></g>`}
+})();
+</script>
+<script type="module" src="/src/main.tsx"></script>
+</body></html>
