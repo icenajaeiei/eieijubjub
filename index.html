@@ -33,10 +33,10 @@ main{flex:1;overflow-y:auto;padding:14px;display:grid;gap:12px;align-content:sta
 #gl{width:100%;height:100%;display:block;touch-action:none;cursor:grab;position:relative;z-index:1}
 #vback{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:3}
 #badge{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--ac);color:#fff;border-radius:999px;padding:5px 12px;font-size:12px;z-index:3;cursor:pointer;display:flex;align-items:center;gap:5px}
-#ar-guide{position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.78);backdrop-filter:blur(8px);color:#fff;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:500;pointer-events:none;z-index:3;display:flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(0,0,0,0.3);text-align:center;max-width:92%}
+#ar-guide{position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.82);backdrop-filter:blur(8px);color:#fff;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:500;pointer-events:none;z-index:3;display:flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(0,0,0,0.3);text-align:center;max-width:92%}
 #ar-pulse{width:8px;height:8px;border-radius:50%;background:#00b14f;box-shadow:0 0 0 0 rgba(0,177,79,0.7);animation:arPulse 1.5s infinite;flex-shrink:0}
 @keyframes arPulse{0%{transform:scale(0.9);box-shadow:0 0 0 0 rgba(0,177,79,0.7)}70%{transform:scale(1.1);box-shadow:0 0 0 10px rgba(0,177,79,0)}100%{transform:scale(0.9);box-shadow:0 0 0 0 rgba(0,177,79,0)}}
-#hint{position:absolute;bottom:8px;width:100%;text-align:center;font-size:12px;color:#c9bfae;pointer-events:none;z-index:2;text-shadow:0 1px 3px #000}
+#hint{position:absolute;bottom:8px;width:100%;text-align:center;font-size:12px;color:#f0e8dc;pointer-events:none;z-index:2;text-shadow:0 1px 3px #000;background:rgba(0,0,0,0.35);padding:3px 10px;border-radius:8px;left:50%;transform:translateX(-50%);width:auto;max-width:94%}
 #vp{padding:14px;border-top:1px solid var(--line);padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 #vp h2{margin:0;font-size:19px}#vp p{margin:4px 0 10px;color:var(--mut);font-size:14px}
 .row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
@@ -93,19 +93,19 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
   <canvas id="gl"></canvas>
   <img id="pimg" hidden alt="">
   <button id="vback" class="ib">← เมนู</button>
-  <span id="badge">📷 AR บนโต๊ะจริง</span>
-  <div id="ar-guide"><span id="ar-pulse"></span><span>📱 หันกล้องไปที่โต๊ะ แล้วแตะเพื่อวางอาหาร (ลากเพื่อย้าย)</span></div>
+  <span id="badge">📷 AR ล็อคบนโต๊ะ</span>
+  <div id="ar-guide"><span id="ar-pulse"></span><span>📱 ขยับ/แพนกล้องเพื่อดูอาหารรอบทิศทาง (อาหารล็อคอยู่บนโต๊ะ)</span></div>
   <div id="zm"><button id="zi" class="ib">＋</button><button id="zo" class="ib">－</button></div>
-  <div id="hint">แตะบนโต๊ะเพื่อวาง • ลากเพื่อย้ายที่ • บิดหมุน • บีบนิ้วเพื่อย่อ/ขยาย</div>
+  <div id="hint">หันกล้องหรือลากเพื่อดูรอบจาน • อาหารล็อคติดโต๊ะนิ่งสนิท • บีบนิ้วเพื่อซูม</div>
  </div>
  <div id="vp"><h2 id="vn"></h2><p id="vd"></p>
   <div class="row">
     <span class="sg" id="sz"></span>
-    <button class="ib" id="ar-mode-btn">🧊 3D สตูดิโอ</button>
-    <button class="ib" id="ar-repose-btn">📍 วางตำแหน่งใหม่</button>
+    <button class="ib" id="ar-recenter">🎯 เล็งหน้าจาน</button>
+    <button class="ib" id="ar-repose-btn">📍 วางจุดใหม่</button>
     <button class="ib" id="ar-scale-reset">📏 ขนาดจริง 1:1</button>
+    <button class="ib" id="ar-mode-btn">🧊 3D สตูดิโอ</button>
     <button class="ib" id="ar-cam-flip">🔄 สลับกล้อง</button>
-    <button class="ib" id="au">🔄 หมุนอัตโนมัติ</button>
     <button class="ib" id="rp">✨ เด้งอีกครั้ง</button>
     <button class="ib" id="ph">📷 ภาพจริง</button>
     <button class="ib" id="up">📤 อัปโหลดรูป</button>
@@ -176,12 +176,6 @@ shadowPlane.rotation.x=-Math.PI/2;shadowPlane.receiveShadow=true;scene.add(shado
 const plate=mesh(new THREE.LatheGeometry([[0,0],[1.9,0],[2.3,.12],[2.5,.17],[2.45,.19],[2.25,.15],[1.9,.1],[0,.1]].map(p=>new THREE.Vector2(...p)),64),M(0xf6f3ee,.18,0,{clearcoat:1,clearcoatRoughness:.05}));
 plate.scale.set(1.15,1,1.15);plate.castShadow=plate.receiveShadow=true;scene.add(plate);
 const Y0=0.1;
-
-// Reticle ring for AR surface placement
-const reticle=new THREE.Group();
-const rRing=mesh(new THREE.RingGeometry(.7,.8,64),new THREE.MeshBasicMaterial({color:0x00b14f,side:THREE.DoubleSide,transparent:true,opacity:.85}),[0,Y0+.02,0]);rRing.rotation.x=-Math.PI/2;reticle.add(rRing);
-const rDot=mesh(new THREE.CircleGeometry(.08,32),new THREE.MeshBasicMaterial({color:0x00b14f,side:THREE.DoubleSide,transparent:true,opacity:.9}),[0,Y0+.02,0]);rDot.rotation.x=-Math.PI/2;reticle.add(rDot);
-reticle.visible=false;scene.add(reticle);
 
 function burger(){const g=new THREE.Group();
  const bt=ctex(256,(c,s)=>{const gr=c.createLinearGradient(0,0,0,s);gr.addColorStop(0,'#8a4a14');gr.addColorStop(.5,'#d49a48');gr.addColorStop(1,'#f0cf8c');c.fillStyle=gr;c.fillRect(0,0,s,s);for(let i=0;i<260;i++){c.fillStyle=Math.random()<.5?'#6e3a10':'#f4d9a0';c.globalAlpha=.06+Math.random()*.15;c.beginPath();c.arc(Math.random()*s,Math.random()*s*.6,1+Math.random()*9,0,7);c.fill()}});
@@ -322,12 +316,29 @@ const RESTS=[
 [[60,110],[240,215],[120,55],[340,150],[180,175]].forEach((p,i)=>RESTS[i].pos=p);
 
 // ---- state
-let cur=null,t0=0,ring=null,spin=0,vel=.4,drag=false,lx=0,auto=true,sCur=1,viewing=false,it=null,rs=null,qty=1,si=1,cart=[];
+let cur=null,t0=0,ring=null,sCur=1,viewing=false,it=null,rs=null,qty=1,si=1,cart=[];
 let foodAnchor=new THREE.Vector3(0,0,0);
-let arMode=true; // AR camera table placement by default!
+let foodFixedYaw=0; // The food model is completely stationary and locked to the table base!
+let arMode=true;
 let arStream=null;
 let arFacing='environment';
 let isPlacing=false;
+
+// Camera orbit around the locked food model (pan camera to see all sides of food!)
+let camDistance=5.2;
+let zoomK=1;
+let touchYaw=0;
+let touchPitch=0.48;
+let curYaw=0;
+let curPitch=0.48;
+
+// Gyroscope tracking
+let gyroEnabled=false;
+let baseGyroAlpha=null;
+let baseGyroBeta=null;
+let gyroYaw=0;
+let gyroPitch=0;
+
 const SIZES=[['เล็ก',.85,-10],['ปกติ',1,0],['ใหญ่',1.18,30]];
 const elastic=x=>x<=0?0:x>=1?1:Math.pow(2,-9*x)*Math.sin((x*10-.75)*(2*Math.PI/3))+1;
 const fmt=n=>'฿'+n;
@@ -364,7 +375,7 @@ async function startARCamera(){
   floor.visible=false;
   shadowPlane.visible=true;
   scene.fog=null;
-  $('#badge').textContent='📷 AR บนโต๊ะจริง';
+  $('#badge').textContent='📷 AR ล็อคบนโต๊ะ';
   $('#ar-guide').style.display='flex';
   $('#ar-mode-btn').textContent='🧊 3D สตูดิโอ';
   return true;
@@ -393,6 +404,38 @@ function switchToStudioMode(msg){
  if(msg)toast(msg);
 }
 
+// Gyroscope tracking for moving phone around the locked food
+function handleOrientation(e){
+ if(!viewing||e.alpha==null||e.beta==null)return;
+ if(baseGyroAlpha===null){
+  baseGyroAlpha=e.alpha;
+  baseGyroBeta=e.beta;
+  return;
+ }
+ let dAlpha=e.alpha-baseGyroAlpha;
+ if(dAlpha>180)dAlpha-=360;
+ if(dAlpha<-180)dAlpha+=360;
+ let dBeta=e.beta-baseGyroBeta;
+ gyroYaw=THREE.MathUtils.degToRad(-dAlpha);
+ gyroPitch=THREE.MathUtils.degToRad(dBeta*0.75);
+}
+
+function setupDeviceOrientation(){
+ if(typeof DeviceOrientationEvent!=='undefined'){
+  if(typeof DeviceOrientationEvent.requestPermission==='function'){
+   DeviceOrientationEvent.requestPermission().then(res=>{
+    if(res==='granted'){
+     window.addEventListener('deviceorientation',handleOrientation,true);
+     gyroEnabled=true;
+    }
+   }).catch(()=>{});
+  }else{
+   window.addEventListener('deviceorientation',handleOrientation,true);
+   gyroEnabled=true;
+  }
+ }
+}
+
 // Raycasting to table plane (Y = 0.1)
 const raycaster=new THREE.Raycaster();
 const pointer=new THREE.Vector2();
@@ -417,8 +460,27 @@ function placeFoodAt(x,z){
  ring=mesh(new THREE.RingGeometry(.9,1,64),new THREE.MeshBasicMaterial({color:0x00b14f,transparent:true,opacity:.9,side:THREE.DoubleSide}),[foodAnchor.x,Y0+.02,foodAnchor.z]);
  ring.rotation.x=-Math.PI/2;scene.add(ring);
  t0=performance.now();
- toast('วางอาหารบนโต๊ะแล้ว ✓ (ลากเพื่อย้ายที่ หรือบิดหมุน)');
+ toast('ล็อคอาหารบนโต๊ะแล้ว ✓ (แพนกล้องเพื่อดูรอบจาน)');
 }
+
+// Update camera position around locked food base
+let fitP={w:1.9,h:1.2};
+function updateCameraTransform(){
+ const targetCenter=new THREE.Vector3(foodAnchor.x,foodAnchor.y+fitP.h*0.35,foodAnchor.z);
+ const r=Math.max(1.6,Math.min(10,camDistance*zoomK));
+ const p=Math.max(0.08,Math.min(1.48,curPitch));
+ cam.position.x=targetCenter.x+r*Math.cos(p)*Math.sin(curYaw);
+ cam.position.y=targetCenter.y+r*Math.sin(p);
+ cam.position.z=targetCenter.z+r*Math.cos(p)*Math.cos(curYaw);
+ cam.lookAt(targetCenter);
+}
+
+function placeCam(){
+ camDistance=fitP.w*2.4+1.4;
+ updateCameraTransform();
+}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();updateCameraTransform()}
+addEventListener('resize',resize);
 
 // ---- 3D Models
 async function showModel(){
@@ -431,26 +493,53 @@ async function showModel(){
  {const b=new THREE.Box3().setFromObject(cur),z=b.getSize(new THREE.Vector3());fitP={w:Math.max(z.x,z.z)/2,h:b.max.y};placeCam()}
  setSteam(gm?0:({noodle_bowl:1.4,rice_plate:1.2,pizza:.5,burger:2.1})[myIt.k]||0);
  cur.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ 
+ // Firmly lock to floor base - stationary!
  cur.position.copy(foodAnchor);plate.position.copy(foodAnchor);
- cur.scale.setScalar(.001);scene.add(cur);t0=performance.now();
- ring=mesh(new THREE.RingGeometry(.9,1,64),new THREE.MeshBasicMaterial({color:0x00b14f,transparent:true,opacity:.9,side:THREE.DoubleSide}),[foodAnchor.x,Y0+.02,foodAnchor.z]);ring.rotation.x=-Math.PI/2;scene.add(ring);
+ cur.rotation.set(0,foodFixedYaw,0);
+ plate.rotation.set(0,foodFixedYaw,0);
+ cur.scale.setScalar(sCur);
+ scene.add(cur);t0=performance.now();
+
+ ring=mesh(new THREE.RingGeometry(.9,1,64),new THREE.MeshBasicMaterial({color:0x00b14f,transparent:true,opacity:.9,side:THREE.DoubleSide}),[foodAnchor.x,Y0+.02,foodAnchor.z]);
+ ring.rotation.x=-Math.PI/2;scene.add(ring);
 }
-function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;R.setSize(w,h,false);cam.aspect=w/h;placeCam()}
-let fitP={w:1.9,h:1.2},zoomK=1,pinch=false;
-function placeCam(){const t=Math.tan(cam.fov*Math.PI/360),w=fitP.w*1.18+.3,h=fitP.h*1.18,d=Math.max(w/(t*cam.aspect),(h+1.3)/(2*t))*1.12+.8,e=d*zoomK;cam.position.set(0,e*.46,e*.89);cam.lookAt(0,fitP.h*.38+.2,0);cam.updateProjectionMatrix()}
-addEventListener('resize',resize);
 
 let last=performance.now();
-(function loop(now){requestAnimationFrame(loop);const dt=(now-last)/1000;last=now;if(!viewing||!cur)return;
- if(!drag&&auto)spin+=vel*dt;
- const k=Math.min((now-t0)/1100,1);sCur+=(SIZES[si][1]-sCur)*Math.min(dt*8,1);
- cur.scale.setScalar(Math.max(.001,elastic(k))*sCur);
+(function loop(now){
+ requestAnimationFrame(loop);
+ const dt=(now-last)/1000;last=now;
+ if(!viewing||!cur)return;
+
+ // Food model stays 100% stationary and locked to the base floor!
  cur.position.x=foodAnchor.x;cur.position.z=foodAnchor.z;
- cur.position.y=foodAnchor.y+(1-Math.min(k*2,1))*-.8+Math.sin(now/900)*.04*k;
- plate.position.x=foodAnchor.x;plate.position.z=foodAnchor.z;plate.position.y=foodAnchor.y;
- cur.rotation.y=spin;
- if(ring){const q=Math.min((now-t0)/900,1);ring.scale.setScalar(1+q*3.2);ring.material.opacity=.9*(1-q);ring.position.x=foodAnchor.x;ring.position.z=foodAnchor.z;if(q>=1){scene.remove(ring);ring=null}}
- tickSteam(now);R.render(scene,cam)})(last);
+ cur.position.y=foodAnchor.y;
+ plate.position.x=foodAnchor.x;plate.position.z=foodAnchor.z;
+ plate.position.y=foodAnchor.y;
+ cur.rotation.set(0,foodFixedYaw,0);
+
+ // Smooth camera orientation tracking as user pans camera around the food
+ const targetYaw=touchYaw+(gyroEnabled?gyroYaw:0);
+ const targetPitch=Math.max(0.08,Math.min(1.48,touchPitch+(gyroEnabled?gyroPitch:0)));
+ curYaw+=(targetYaw-curYaw)*Math.min(dt*14,.35);
+ curPitch+=(targetPitch-curPitch)*Math.min(dt*14,.35);
+ updateCameraTransform();
+
+ // Scale transition
+ sCur+=(SIZES[si][1]-sCur)*Math.min(dt*8,1);
+ cur.scale.setScalar(sCur);
+
+ // Expanding placement ring on the floor base
+ if(ring){
+  const q=Math.min((now-t0)/900,1);
+  ring.scale.setScalar(1+q*3.2);
+  ring.material.opacity=.9*(1-q);
+  ring.position.x=foodAnchor.x;ring.position.z=foodAnchor.z;
+  if(q>=1){scene.remove(ring);ring=null}
+ }
+ tickSteam(now);
+ R.render(scene,cam);
+})(last);
 
 // ---- screens
 function go(s){$('#home').hidden=s!=='home';$('#rest').hidden=s!=='rest';$('#back').hidden=s==='home';
@@ -478,6 +567,11 @@ function upd(){const s=SIZES[si],u=it.p+s[2];$('#qn').textContent=qty;$('#add').
 async function openView(x){
  zoomK=1;$('#pimg').hidden=true;$('#ph').textContent='📷 ภาพจริง';it=x;qty=1;si=1;sCur=1;viewing=true;
  foodAnchor.set(0,0,0);
+ foodFixedYaw=0;
+ touchYaw=0;touchPitch=0.48;curYaw=0;curPitch=0.48;
+ baseGyroAlpha=null;baseGyroBeta=null;gyroYaw=0;gyroPitch=0;
+ setupDeviceOrientation();
+
  $('#view').hidden=false;$('#vn').textContent=x.e+' '+x.n;$('#vd').textContent=x.d+' • 🛵 ส่งถึงประมาณ '+clock(eta(rs))+' น.';
  upd();resize();
  if(arMode){startARCamera()}else{switchToStudioMode()}
@@ -487,7 +581,6 @@ async function openView(x){
 $('#sz').innerHTML=SIZES.map((s,i)=>'<button data-i="'+i+'">'+s[0]+'</button>').join('');
 $('#sz').onclick=e=>{const i=e.target.dataset.i;if(i!=null){si=+i;upd()}};
 $('#vback').onclick=()=>{viewing=false;$('#view').hidden=true;stopARCamera()};
-$('#au').onclick=()=>{auto=!auto;$('#au').style.opacity=auto?1:.5};
 $('#rp').onclick=showModel;
 $('#qm').onclick=()=>{qty=Math.max(1,qty-1);upd()};$('#qp').onclick=()=>{qty++;upd()};
 $('#add').onclick=()=>{if(cart.length&&cart[0].r!==rs.n)cart=[];cart.push({n:it.n,s:SIZES[si][0],q:qty,u:it.p+SIZES[si][2],r:rs.n,rr:rs});$('#cn').textContent=cart.reduce((a,c)=>a+c.q,0);toast('เพิ่ม '+it.n+' แล้ว ✓');viewing=false;$('#view').hidden=true;stopARCamera()};
@@ -500,6 +593,11 @@ $('#cartbtn').onclick=()=>{const t=cart.reduce((a,c)=>a+c.q*c.u,0);
 $('#sheet').onclick=e=>{if(e.target.id==='sheet')$('#sheet').hidden=true};
 
 // ---- AR Buttons
+$('#ar-recenter').onclick=()=>{
+ touchYaw=0;touchPitch=0.48;
+ baseGyroAlpha=null;baseGyroBeta=null;gyroYaw=0;gyroPitch=0;
+ toast('เล็งหน้าจานเรียบร้อย ✓');
+};
 $('#ar-mode-btn').onclick=()=>{
  if(arMode){switchToStudioMode('สลับเป็นโหมด 3D สตูดิโอ')}
  else{startARCamera();toast('สลับเป็นโหมด AR กล้องจริง')}
@@ -508,7 +606,7 @@ $('#badge').onclick=()=>$('#ar-mode-btn').click();
 $('#ar-repose-btn').onclick=()=>{
  isPlacing=true;
  $('#ar-guide').style.display='flex';
- toast('แตะจุดบนโต๊ะเพื่อวางอาหาร');
+ toast('แตะจุดบนโต๊ะเพื่อวางอาหารใหม่');
 };
 $('#ar-scale-reset').onclick=()=>{
  si=1;sCur=1;zoomK=1;upd();placeCam();
@@ -520,56 +618,49 @@ $('#ar-cam-flip').onclick=()=>{
  toast(arFacing==='environment'?'ใช้กล้องหลัง (ส่องโต๊ะ)':'ใช้กล้องหน้า');
 };
 
-// ---- Interactive Touch & Drag on Table
-let hasMoved=false;
-cv.addEventListener('pointerdown',e=>{
- drag=true;hasMoved=false;lx=e.clientX;cv.setPointerCapture(e.pointerId);
- if(arMode&&isPlacing){
-  const hit=getTableHit(e.clientX,e.clientY);
-  if(hit)placeFoodAt(hit.x,hit.z);
- }
-});
-cv.addEventListener('pointermove',e=>{
- if(!drag)return;
- const dx=e.clientX-lx;
- if(Math.abs(dx)>4)hasMoved=true;
- if(pinch)return;
- if(arMode&&!isPlacing){
-  const hit=getTableHit(e.clientX,e.clientY);
-  if(hit){
-   foodAnchor.x=Math.max(-3.5,Math.min(3.5,hit.x));
-   foodAnchor.z=Math.max(-3.5,Math.min(3.5,hit.z));
-  }
- }else{
-  vel=dx*.012;spin+=vel;
- }
- lx=e.clientX;
-});
-['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,e=>{
- if(drag&&!hasMoved&&arMode){
-  const hit=getTableHit(e.clientX,e.clientY);
-  if(hit)placeFoodAt(hit.x,hit.z);
- }
- drag=false;vel=Math.sign(vel||1)*.4;
-}));
-
-// Multi-touch gestures (Pinch-to-scale & Twist-to-rotate)
-const ptrs=new Map();let pd=0,pa=0;
+// ---- Interactive Touch: Panning camera around locked food & 2-finger drag
+let drag=false,hasMoved=false,lx=0,ly=0;
+const ptrs=new Map();let pd=0;
 const pdist=()=>{const a=[...ptrs.values()];return Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1};
-const pangle=()=>{const a=[...ptrs.values()];return Math.atan2(a[1][1]-a[0][1],a[0][1]-a[0][0])};
-cv.addEventListener('pointerdown',e=>{ptrs.set(e.pointerId,[e.clientX,e.clientY]);if(ptrs.size===2){pinch=true;pd=pdist();pa=pangle()}});
+
+cv.addEventListener('pointerdown',e=>{
+ ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+ drag=true;hasMoved=false;lx=e.clientX;ly=e.clientY;
+ cv.setPointerCapture(e.pointerId);
+ if(ptrs.size===2){pd=pdist()}
+});
+
 cv.addEventListener('pointermove',e=>{
  if(!ptrs.has(e.pointerId))return;
  ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+
  if(ptrs.size===2){
+  // 2 fingers pinch: zoom camera
   const d=pdist();if(pd)zoom(pd/d);pd=d;
-  const a=pangle();spin+=(a-pa);pa=a;
+  return;
  }
+
+ if(!drag)return;
+ const dx=e.clientX-lx;
+ const dy=e.clientY-ly;
+ if(Math.abs(dx)>3||Math.abs(dy)>3)hasMoved=true;
+
+ // 1 finger drag: Orbit/Pan camera around the locked food model!
+ touchYaw-=dx*0.0075;
+ touchPitch=Math.max(0.08,Math.min(1.48,touchPitch+dy*0.006));
+
+ lx=e.clientX;ly=e.clientY;
 });
-['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,e=>{ptrs.delete(e.pointerId);if(ptrs.size<2){pinch=false;pd=0}}));
-cv.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.1:.91)},{passive:false});
-cv.addEventListener('dblclick',()=>{zoomK=1;foodAnchor.set(0,0,0);placeCam()});
-$('#zi').onclick=()=>zoom(.8);$('#zo').onclick=()=>zoom(1.25);
+
+['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,e=>{
+ ptrs.delete(e.pointerId);
+ if(ptrs.size<2)pd=0;
+ if(drag&&!hasMoved&&arMode&&isPlacing){
+  const hit=getTableHit(e.clientX,e.clientY);
+  if(hit)placeFoodAt(hit.x,hit.z);
+ }
+ drag=false;
+}));
 
 // ---- real-photo upload
 async function setPhoto(f){const im=await createImageBitmap(f),m=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*m);c.height=Math.round(im.height*m);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
@@ -742,7 +833,10 @@ function setSteam(y){if(steam){scene.remove(steam);steam=null}steamY=y;if(!y)ret
 function tickSteam(now){if(!steam)return;steam.children.forEach(s=>{const u=s.userData,p=((now/1000)*u.sp+u.ph)%1;s.position.set(foodAnchor.x+u.x+Math.sin(p*6+u.ph*9)*.15,foodAnchor.y+steamY+p*1.8,foodAnchor.z+u.z);s.scale.setScalar(.5+p*1.3);s.material.opacity=Math.sin(p*Math.PI)*.16})}
 
 // ---- 3D zoom: buttons, wheel, double-tap reset
-function zoom(f){zoomK=Math.min(2.4,Math.max(.45,zoomK*f));placeCam()}
+function zoom(f){zoomK=Math.min(2.4,Math.max(.45,zoomK*f));updateCameraTransform()}
+cv.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.1:.91)},{passive:false});
+cv.addEventListener('dblclick',()=>{zoomK=1;touchYaw=0;touchPitch=0.48;baseGyroAlpha=null;baseGyroBeta=null;gyroYaw=0;gyroPitch=0;updateCameraTransform()});
+$('#zi').onclick=()=>zoom(.8);$('#zo').onclick=()=>zoom(1.25);
 
 // ---- map: pan / zoom / rotate by hand
 let mAuto=true,mRot=0,mpd=0,mpa=0;const mp=new Map(),mm=$('#map'),mh=()=>vb.w*250/360,mpts=()=>[...mp.values()];
